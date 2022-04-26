@@ -58,7 +58,7 @@ macro_rules! service_macro {
 
             fn try_from(cmd: u16) -> Result<Self,Self::Error> {
                 let mut i: usize = 0;
-                let h_field: Vec<u16> = (0..CommandID::VARIANT_COUNT).collect();
+                let h_field: Vec<u16> = (0..CommandID::VARIANT_COUNT as u16).collect();
                 match cmd {
                     $(x if x == h_field[increment(&mut i)] => Ok(CommandID::$type_e),)*
                     $(x if x == h_field[increment(&mut i)] => Ok(CommandID::$type_q),)*
@@ -73,7 +73,7 @@ macro_rules! service_macro {
 
             fn try_from(c: CommandID) -> Result<u16,Self::Error> {
                 let mut i: usize = 0;
-                let h_field: Vec<u16> = (0..CommandID::VARIANT_COUNT).collect();
+                let h_field: Vec<u16> = (0..CommandID::VARIANT_COUNT as u16).collect();
                 match c {
                     $(CommandID::$type_e => Ok(h_field[CommandID::$type_e as usize]),)*
                     $(CommandID::$type_q => Ok(h_field[CommandID::$type_q as usize]),)*
