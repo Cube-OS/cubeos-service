@@ -180,19 +180,47 @@ impl <T: Clone> Service<T> {
             match socket.recv_from(&mut buf) {
                 Ok((b,a)) => {
                     match udp_handler(&sub,&mut buf[..b].to_vec()){
-                        Ok(x) => {                                                    
-                            socket.send_to(&x,&a).expect("couldn't send");
-                        }
-                        Err(e) => {
-                            match bincode::serialize(&e) {
-                                Ok(x) => socket.send_to(&x,&a).expect("couldn't send"),
-                                Err(_) => socket.send_to(&[0xF0],&a).expect("couldn't send"),
-                            };
-                        }
-                    }
+                        Ok(x) => socket.send_to(&x,&a).expect("couldn't send"),
+                        Err(e) => socket.send_to(&handle_err(&e),&a).expect("couldn't send"),
+                    };
                 },
                 Err(_) => continue,
-            }
+            };
         }
+    }
+}
+
+// Helper function to handle Errors
+// 
+// Returns [0,0] instead of CommandID, 
+// or [255,255] if another error occured within this function
+fn handle_err(err: &Error) -> Vec<u8>{
+    #[cfg(feature = "debug")]
+    println!("Handle Error");
+    let mut buf: Vec<u8> = Vec::new();
+    match bincode::serialize(err) {
+        Ok(mut k) => {
+            buf.append(&mut [0,0].to_vec());
+            buf.append(&mut k);
+        }
+        Err(b) => {
+            buf.append(&mut [255,255].to_vec());
+            buf.push(from_bincode_error(b));
+        }
+    }
+    buf
+}
+
+fn from_bincode_error(b: bincode::Error) -> u8 {
+    match *b {
+        bincode::ErrorKind::Io(_) => 0,
+        bincode::ErrorKind::InvalidUtf8Encoding(_) => 1,
+        bincode::ErrorKind::InvalidBoolEncoding(_) => 2,
+        bincode::ErrorKind::InvalidCharEncoding => 3,
+        bincode::ErrorKind::InvalidTagEncoding(_) => 4,
+        bincode::ErrorKind::DeserializeAnyNotSupported => 5,
+        bincode::ErrorKind::SizeLimit => 6,
+        bincode::ErrorKind::SequenceMustHaveLength => 7,
+        bincode::ErrorKind::Custom(_) => 8,            
     }
 }

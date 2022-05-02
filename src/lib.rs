@@ -117,6 +117,7 @@
 pub use ::variant_count;
 pub use ::bincode;
 pub use ::serde_json;
+pub use ::command_id;
 
 pub use ::serde;
 pub use ::cubeos_error;

@@ -19,34 +19,47 @@
 use cubeos_error::{Error, Result};
 use serde::{Serialize,Deserialize};
 use std::mem::size_of;
+use std::convert::TryFrom;
 
 // Struct that enables deserializing of incoming Vec<u8> msgs
 // into data structures specified in the API or Service
 #[derive(Serialize,Deserialize)]
-pub struct Command<T> {
+pub struct Command<C,T> {
     // SpacePacket Command-ID retained for future use
-    _id: u64,
+    pub id: C,
     // Data from Vec<u8>,
-    data: T,
+    pub data: T,
 }
-impl<'a,T: Deserialize<'a>> Command<T>
+impl<'a,C: TryFrom<u16>, T: Serialize + Deserialize<'a>> Command<C,T>
+    where 
+        u16: TryFrom<C>,
+        cubeos_error::Error: From<<C as TryFrom<u16>>::Error>,
+        cubeos_error::Error: From<<u16 as TryFrom<C>>::Error>,
     {
-    pub fn new(&self, _id: u64, msg: &'a Vec<u8>) -> Self {
+    pub fn new(&self, id: C, msg: &'a Vec<u8>) -> Self {
         Self {
-            _id,
-            data: Command::<T>::parse(&msg).unwrap(),
+            id,
+            data: bincode::deserialize(&msg).unwrap(),
         }
     }
-    // parser function, that deserializes msg if len equals
-    // size of the data type T
-    pub fn parse(msg: &'a Vec<u8>) -> Result<T> {       
-        // if msg.len() != size_of::<T>() {
-        //     #[cfg(feature = "debug")]
-        //     println!("WrongNoArgs");
-        //     Err(Error::WrongNoArgs)
-        // } else {            
-            Ok(bincode::deserialize(&msg).unwrap())
-        // }
+
+    // parser function
+    pub fn parse(msg: &'a Vec<u8>) -> Result<Self> {       
+        Ok(
+            Command{
+                id: C::try_from(u16::from_be_bytes([msg[0],msg[1]]))?,
+                data: bincode::deserialize(&msg[2..])?,
+            }
+        )
+    }
+
+    // serializer function
+    pub fn serialize(id: C, msg: T) -> Result<Vec<u8>> {
+        let mut buf: Vec<u8> = Vec::new();
+
+        buf.append(&mut u16::try_from(id)?.to_be_bytes().to_vec());
+        buf.append(&mut bincode::serialize(&msg)?);
+        Ok(buf)
     }
 }
 
@@ -55,4 +68,9 @@ impl<'a,T: Deserialize<'a>> Command<T>
 #[derive(Serialize,Deserialize)]
 pub struct Generic {
     pub gen: (),
+}
+impl Generic {
+    pub fn new() -> Self {
+        Self{gen:()}
+    }
 }
