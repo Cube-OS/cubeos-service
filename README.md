@@ -136,13 +136,18 @@ or with cross complier
 
 `cargo build --features ground`
 
-or with cross complier 
-
-`cargo kubos -c build --target kubos-linux-isis-gcc -- --release --features ground`
-
 Additionally the UDP handling and Ground features can be combined with **debug**, e.g.:
 `cargo build --features debug`
 `cargo build --features ground,debug`
+
+## Run a service
+To run a service simply transfer the executable to the satellite or ground station to a desired folder (e.g. /home/kubos/) and run:
+
+`./executable`
+
+This requires a config file `/etc/kubos-config.toml`. Alternatively run the executable with the -c flag to specify a config file:
+
+`./executable -c path/to/config`
 
 ## Troubleshooting
 CubeOS uses git ssh URL's for dependencies within the Organisation. Pls make sure to add your to the repository:
