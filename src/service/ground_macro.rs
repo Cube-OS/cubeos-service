@@ -42,56 +42,6 @@ macro_rules! service_macro {
         use command_id::*;
 
         command_id!{$($type_e,)*$($type_q,)*$($type_m,)*}
-
-        // // construct CommandID Enum
-        // #[derive(Clone,Copy,Debug,PartialEq,VariantCount)]
-        // pub enum CommandID {
-        //     $(
-        //         $type_e,
-        //     )*
-        //     $(
-        //         $type_q,
-        //     )*
-        //     $(
-        //         $type_m,
-        //     )*
-        // }
-        // // implement conversion of u16 to CommandID
-        // impl TryFrom<u16> for CommandID {
-        //     type Error = CubeOSError;
-
-        //     fn try_from(cmd: u16) -> Result<Self,Self::Error> {
-        //         let mut i: usize = 0;
-        //         let h_field: Vec<u16> = (0..CommandID::VARIANT_COUNT).collect();
-        //         match cmd {
-        //             $(x if x == h_field[increment(&mut i)] => Ok(CommandID::$type_e),)*
-        //             $(x if x == h_field[increment(&mut i)] => Ok(CommandID::$type_q),)*
-        //             $(x if x == h_field[increment(&mut i)] => Ok(CommandID::$type_m),)*
-        //             _ => Err(CubeOSError::NoCmd),
-        //         }
-        //     }
-        // }
-        // // implement conversion of CommandID to u16
-        // impl TryFrom<CommandID> for u16 {
-        //     type Error = CubeOSError;
-
-        //     fn try_from(c: CommandID) -> Result<u16,Self::Error> {
-        //         let mut i: usize = 0;
-        //         let h_field: Vec<u16> = (0..CommandID::VARIANT_COUNT).collect();
-        //         match c {
-        //             $(CommandID::$type_e => Ok(h_field[CommandID::$type_e as usize]),)*
-        //             $(CommandID::$type_q => Ok(h_field[CommandID::$type_q as usize]),)*
-        //             $(CommandID::$type_m => Ok(h_field[CommandID::$type_m as usize]),)*
-        //             _ => Err(CubeOSError::NoCmd),
-        //         }
-        //     }
-        // }        
-
-        // // helper function to convert CommandID to u16
-        // pub fn convert(c: CommandID) -> CubeOSResult<u16> {
-        //     println!("{:?}",c);
-        //     CommandID::try_into(c)
-        // }
         
         // function to connect to and send UDP messages to the satellite
         // binds socket and sends to target addresses specified in the config.toml file
@@ -125,26 +75,6 @@ macro_rules! service_macro {
             }
         }
 
-        // fn handle_reply(buf: &mut Vec<u8>, cmd: CommandID, des: T) -> serde_json::Result<String> {
-        //     // Check bytes 0+1 for return type
-        //     // [0,0] or [255,255] => Error
-        //     // [CommandID as u16] => No Error
-        //     match CommandID::try_from(((msg[0] as u16) << 8) | msg[1] as u16) {
-        //         Ok(cmd) => deserialize_reply(&buf[2..].to_vec(), des)
-        //         _ => deserialize_reply(&buf[2..].to_vec(), CubeOSError)
-        //     }
-        // }
-
-        // fn deserialize_reply(buf: &Vec<u8>, des: T) -> serde_json::Result<String> {
-        //     match bincode::deserialize::<des>(&buf[2..].to_vec()) {
-        //         Ok(v) => Ok(serde_json::to_string(&$gql_q::from(v)).unwrap()),
-        //         Err(e) => Ok(
-        //             serde_json::to_string(&CubeOSError::from(e))
-        //             .unwrap()
-        //         ),
-        //     }
-        // }
-
         // GraphQL interface run on the debug computer
         // Translates GraphQL Inputs into UDP msg and sends these to the satellite
         // Translates Serialized responses from the satellite into GraphQL
@@ -169,53 +99,6 @@ macro_rules! service_macro {
                         },
                         Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
                     }
-                            // match convert(CommandID::$type_q) {
-                            //     Ok(b) => {
-                            //         let mut cmd: Vec<u8> = b.to_be_bytes().to_vec();
-                            //         println!("{:?}",cmd);
-                            //         cmd.append(&mut bincode::serialize(&s).unwrap());
-                            //         let test: u8 = 0;   
-                            //         match udp_passthrough(cmd,executor.context().udp()) {
-                            //             Ok(buf) => {
-                            //                 #[cfg(feature = "debug")]
-                            //                 println!("Handle reply");
-                            //                 match CommandID::try_from(((buf[0] as u16) << 8) | buf[1] as u16) {
-                            //                     Ok(CommandID::$type_q) => {
-                            //                         match bincode::deserialize::<$rep_q>(&buf[2..].to_vec()) {
-                            //                             Ok(v) => Ok(serde_json::to_string(&$gql_q::from(v)).unwrap()),
-                            //                             Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
-                            //                         }                                                    
-                            //                     }
-                            //                     _ => Ok(serde_json::to_string(
-                            //                             &bincode::deserialize::<CubeOSError>(&buf[2..].to_vec()).unwrap()
-                            //                         ).unwrap() 
-                            //                     ),
-                            //                 }                                            
-                            //             }
-                            //             Err(err) => Ok(
-                            //                 serde_json::to_string(&CubeOSError::from(err))
-                            //                 .unwrap()
-                            //             ),
-                            //         }
-                            //         // match bincode::deserialize::<$rep_q>(&udp_passthrough(cmd,executor.context().udp()).unwrap()) {
-                            //         //     Ok(v) => Ok(serde_json::to_string(&$gql_q::from(v)).unwrap()),
-                            //         //     Err(e) => Ok(
-                            //         //         serde_json::to_string(&CubeOSError::from(e))
-                            //         //         .unwrap()
-                            //         //     ),
-                            //         // }                                                                    
-                            //     },
-                            //     Err(e) => Ok(
-                            //         serde_json::to_string(&CubeOSError::from(e))
-                            //         .unwrap()
-                            //     ),
-                            // }
-                        
-                        // Err(e) => Ok(
-                        //     serde_json::to_string(&CubeOSError::from(e))
-                        //     .unwrap()
-                        // ),
-                    // }
                 }            
             )*
             $(
@@ -231,44 +114,7 @@ macro_rules! service_macro {
                         }
                         Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
                     }
-                }
-                    // match convert(CommandID::$type_e) {
-                    //     Ok(b) => {
-                    //         let mut cmd: Vec<u8> = b.to_be_bytes().to_vec();
-                    //         println!("{:?}",cmd);
-                    //         match udp_passthrough(cmd,executor.context().udp()) {
-                    //             Ok(buf) => {
-                    //                 match CommandID::try_from(((buf[0] as u16) << 8) | buf[1] as u16) {
-                    //                     Ok(CommandID::$type_e) => {
-                    //                         match bincode::deserialize::<$rep_e>(&buf[2..].to_vec()) {
-                    //                             Ok(v) => Ok(serde_json::to_string(&$gql_e::from(v)).unwrap()),
-                    //                             Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
-                    //                         }                                                    
-                    //                     }
-                    //                     _ => Ok(serde_json::to_string(
-                    //                         &bincode::deserialize::<CubeOSError>(&buf[2..].to_vec()).unwrap()
-                    //                         ).unwrap()
-                    //                     ),
-                    //                 }                                            
-                    //             }
-                    //             Err(err) => Ok(
-                    //                 serde_json::to_string(&CubeOSError::from(err))
-                    //                 .unwrap()
-                    //             ),
-                    //         }
-                    //         // match bincode::deserialize::<$rep_e>(&udp_passthrough(cmd,executor.context().udp()).unwrap()) {
-                    //         //     Ok(v) => Ok(serde_json::to_string(&$gql_e::from(v)).unwrap()),
-                    //         //     Err(e) => Ok(
-                    //         //         serde_json::to_string(&CubeOSError::from(e))
-                    //         //         .unwrap()
-                    //         //     ),
-                    //         // }
-                    //     },
-                    //     Err(e) => Ok(
-                    //         serde_json::to_string(&CubeOSError::from(e))
-                    //         .unwrap()
-                    //     ),
-                    // }
+                }                
             )*
         });
         pub struct MutationRoot;  
@@ -290,53 +136,7 @@ macro_rules! service_macro {
                             }
                         },
                         Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
-                    }
-                    // match <$cmd_m>::try_from(msg) {
-                    //     Ok(s) => {
-                    //         match convert(CommandID::$type_m) {
-                    //             Ok(b) => {
-                    //                 let mut cmd: Vec<u8> = b.to_be_bytes().to_vec();
-                    //                 println!("{:?}",cmd);
-                    //                 cmd.append(&mut bincode::serialize(&s).unwrap());
-                    //                 match udp_passthrough(cmd,executor.context().udp()) {
-                    //                     Ok(buf) => {
-                    //                         match CommandID::try_from(((buf[0] as u16) << 8) | buf[1] as u16) {
-                    //                             Ok(CommandID::$type_m) => {
-                    //                                 match bincode::deserialize::<$rep_m>(&buf[2..].to_vec()) {
-                    //                                     Ok(v) => Ok(serde_json::to_string(&$gql_m::from(v)).unwrap()),
-                    //                                     Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
-                    //                                 }                                                    
-                    //                             }
-                    //                             _ => Ok(serde_json::to_string(
-                    //                                     &bincode::deserialize::<CubeOSError>(&buf[2..].to_vec()).unwrap()
-                    //                                 ).unwrap()
-                    //                             ),
-                    //                         }                                            
-                    //                     }
-                    //                     Err(err) => Ok(
-                    //                         serde_json::to_string(&CubeOSError::from(err))
-                    //                         .unwrap()
-                    //                     ),
-                    //                 }
-                    //                 // match bincode::deserialize::<$rep_m>(&udp_passthrough(cmd,executor.context().udp()).unwrap()) {
-                    //                 //     Ok(v) => Ok(serde_json::to_string(&$gql_m::from(v)).unwrap()),
-                    //                 //     Err(e) => Ok(
-                    //                 //         serde_json::to_string(&CubeOSError::from(e))
-                    //                 //         .unwrap()
-                    //                 //     ),
-                    //                 // }                                
-                    //             },
-                    //             Err(e) => Ok(
-                    //                 serde_json::to_string(&CubeOSError::from(e))
-                    //                 .unwrap()
-                    //             ),
-                    //         }
-                    //     },
-                    //     Err(e) => Ok(
-                    //         serde_json::to_string(&CubeOSError::from(e))
-                    //         .unwrap()
-                    //     ),
-                    // }             
+                    }           
                 }            
             )*
         });
