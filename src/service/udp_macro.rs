@@ -21,34 +21,15 @@
 macro_rules! service_macro {
     (
         $(
-            // $ignore: ident : $type: ident => {$func: tt, $ign: tt, $cmd: tt},
             $ign3: tt: $type: ident => fn $func: tt (&self $(,$ign0: tt: $cmd: tt)*) -> $ign1: tt<$rep: ty>; ($ign2: ty, $ign4: ty),
-                // ign0: tt:$cmd: tt) -> $ign1: tt<$rep: tt>; ($ign2: tt, $ign4: tt),
         )+
-        // $(
-        //     $ign3n: tt: $typen: ident => fn $funcn: tt (&self, $($ign0n: tt: $cmdn: tt),+) -> $ign1n: tt<$repn: tt>; ($ign2n: tt, $ign4n: tt),
-        // )*
-        // $(
-        //     $ign3: tt: $type3: ident => fn $func: tt (&self, $($ign0: tt: $cmd: tt),+) -> $ign1: tt<$rep: tt>; ($ign2: tt, $ign4: tt),
-        // )*
-        // $(
-        //     $ign3: tt: $type4: ident => fn $func: tt (&self, $($ign0: tt: $cmd: tt),+) -> $ign1: tt<$rep: tt>; ($ign2: tt, $ign4: tt),
-        // )*
     ) => {
         use command_id::*;
         use std::env::Args;
         use crate::subsystem::*;
 
         command_id!{$($type,)*}    
-        // command!{$(id: $type,$(cmd: $cmd),*)+}
-        
-        // pub trait Service {
-        //     $(fn $func(&self, $($ign0:$cmd),+) -> CubeOSResult<$rep>;)+            
-        // }
-        // pub trait UdpHandler {
-        //     fn udp_handler(&self, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>>;
-        // }
-        // impl UdpHandler for Service {
+
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
         pub fn udp_handler(sub: &Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
@@ -59,26 +40,10 @@ macro_rules! service_macro {
                     let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
                     // Serialize 
                     let data = command.data;
-                    // let f: dyn Fn($($cmd),*) -> CubeOSResult<$rep> = sub.$func;
-                    // let count = count!($($cmd)*);
-                    // let strings: [String; 3] = init_array![String::from("hi!"); 3];
                     Command::<CommandID,$rep>::serialize(command.id,(run!(Subsystem::$func; sub, data $(,$cmd)*))?)                                        
                 },)* 
-                // $(CommandID::$type2 => {
-                //     // Parse Command
-                //     let command = Command::<CommandID,($($cmd),+)>::parse(msg)?;                    
-                //     // Serialize Result
-                //     Command::<CommandID,$rep>::serialize(command.id,sub.$func(command.data.0,command.data.1,command.data.2)?)                                        
-                // },)* 
-                // $(CommandID::$type2 => {
-                //     // Parse Command
-                //     let command = Command::<CommandID,($($cmd),+)>::parse(msg)?;                    
-                //     // Serialize Result
-                //     Command::<CommandID,$rep>::serialize(command.id,sub.$func(command.data.0,command.data.1,command.data.2,command.data.3)?)                                        
-                // },)* 
             }
         }
-        // }
     };
 }
 
@@ -88,30 +53,24 @@ macro_rules! count {
     ( $x:tt $($xs:tt)* ) => (1usize + count!($($xs)*));
 }
 
-// #[macro_export]
-// macro_rules! init_array {
-//     (@accum (0, $_e:expr) -> ($($body:tt)*))
-//         => {init_array!(@as_expr [$($body)*])};
-//     (@accum (1, $e:expr) -> ($($body:tt)*))
-//         => {init_array!(@accum (0, $e) -> ($($body)* $e,))};
-//     (@accum (2, $e:expr) -> ($($body:tt)*))
-//         => {init_array!(@accum (1, $e) -> ($($body)* $e,))};
-//     (@accum (3, $e:expr) -> ($($body:tt)*))
-//         => {init_array!(@accum (2, $e) -> ($($body)* $e,))};
-//     (@as_expr $e:expr) => {$e};
-//     [$e:expr; $n:tt] => {
-//         {
-//             let e = $e;
-//             init_array!(@accum ($n, e.clone()) -> ())
-//         }
-//     };
-// }
-
 #[macro_export]
 macro_rules! run {    
-    ($f: expr; $sub: tt, $in: tt)=> {$f($sub)};
-    ($f: expr; $sub: tt, $in: tt, $_cmd: tt)=> {$f($sub,$in)};
-    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt) => {$f($sub,$in.0,$in.1)};
-    // ($f: expr; $in: tt, $_cmd: tt, $_cmd2: tt) => {$f($in.0, $in.1)};
-    // ($f: expr; $in: tt, $_cmd: tt) => {$f($in)};
+    // 0 input parameter
+    ($f: expr; $sub: tt, $in: tt)
+        => {$f($sub)};
+    // 1 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt)
+        => {$f($sub,$in)};
+    // 2 input parameter        
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt) 
+        => {$f($sub,$in.0,$in.1)};
+    // 3 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2)};
+    // 4 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3)};
+    // 5 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt, $_cmd5: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3,$in.4)};
 }
