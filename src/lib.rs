@@ -132,6 +132,7 @@ mod response;
 
 pub use crate::response::*;
 pub use crate::service::*;
+// pub use crate::command::{Generic};
 pub use crate::command::{Command, Generic};
 pub use kubos_system::logger as Logger;
 pub use kubos_system::Config;

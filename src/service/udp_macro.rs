@@ -21,26 +21,56 @@
 macro_rules! service_macro {
     (
         $(
-            // $ignore: ident : $type: ident => {$func: tt, $ign: tt, $cmd: tt},
-            $ign3: tt: $type: ident => fn $func: tt (&self, $ign0: tt:$cmd: tt) -> $ign1: tt<$rep: tt>; ($ign2: tt, $ign4: tt),
+            $ign3: tt: $type: ident => fn $func: tt (&self $(,$ign0: tt: $cmd: tt)*) -> $ign1: tt<$rep: ty>; in: $($conv_q: ty),*; out: $gql_q: tt;
         )+
     ) => {
         use command_id::*;
+        use std::env::Args;
+        use crate::subsystem::*;
 
         command_id!{$($type,)*}    
-        
+
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
         pub fn udp_handler(sub: &Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
-            // Verify CommandID
-            match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
+            // Verify CommandID            
+            match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {                
                 $(CommandID::$type => {
                     // Parse Command
-                    let cmd = Command::<CommandID,$cmd>::parse(msg)?;
-                    // Serialize Result
-                    Command::<CommandID,$rep>::serialize(cmd.id,sub.$func(cmd.data)?)
-                },)+ 
+                    let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
+                    // Serialize 
+                    let data = command.data;
+                    Command::<CommandID,$rep>::serialize(command.id,(run!(Subsystem::$func; sub, data $(,$cmd)*))?)                                        
+                },)* 
             }
         }
     };
+}
+
+#[macro_export]
+macro_rules! count {
+    () => (0usize);
+    ( $x:tt $($xs:tt)* ) => (1usize + count!($($xs)*));
+}
+
+#[macro_export]
+macro_rules! run {    
+    // 0 input parameter
+    ($f: expr; $sub: tt, $in: tt)
+        => {$f($sub)};
+    // 1 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt)
+        => {$f($sub,$in)};
+    // 2 input parameter        
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt) 
+        => {$f($sub,$in.0,$in.1)};
+    // 3 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2)};
+    // 4 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3)};
+    // 5 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt, $_cmd5: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3,$in.4)};
 }
