@@ -19,8 +19,8 @@ Additionally the debug feature enables some terminal printouts.
 The `service_macro!` has the following structure:
 ```
 service_macro!{
-  query: $cmdid0 => fn function0(&self, $Input(s)) -> Result<$Reply>; in: $GqlInput; out: $GqlReply;
-  mutation: $cmdid1 => fn function1(&self, $Input(s)) -> Result<$Reply>; in: $GqlInput; out: $GqlReply;
+  query: $cmdid0 => fn function0(&self, $Inputs) -> Result<$Reply>; in: $GqlInput; out: $GqlReply;
+  mutation: $cmdid1 => fn function1(&self, $Inputs) -> Result<$Reply>; in: $GqlInput; out: $GqlReply;
 }
 ```
 Where `$Input(s)` are the arguments for `function\_()` (leave blank if `function\_()` has no arguments). The whole part `fn function_(&self, args) -> Result<$Reply>` can be copied from the implementation of the function in the `subsytem.rs`. 
