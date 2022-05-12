@@ -19,25 +19,17 @@
 #[macro_export]
 macro_rules! service_macro {
     (
-        // $(
-        //     // generic: $type_e: ident => {$func_e: tt, $cmd_e: tt, $conv_e: tt, $rep_e: tt},
-        //     // generic: $type_e: ident => fn $func_e: tt (&self, $ign0_e: tt:Generic) -> $ign1_e: tt<$rep_e: tt>; (Generic, $gql_e: tt),
-        //     generic: $type_e: ident => fn $func_e: tt (&self) -> $ign1_e: tt<$rep_e: tt>; (Generic, $gql_e: tt),
-        // )*
-        $(
-            // query: $type_q: ident => {$func_q: tt, $cmd_q: tt, $conv_q: tt, $rep_q: tt},
-            query: $type_q: ident => fn $func_q: tt (&self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: tt>; in: $($conv_q: ty),*; out: $gql_q: tt;
-            // $((in: $($conv_q: tt,)* out: $($gql_q: tt)*),)*
+        $(            
+            query: $type_q: ident => fn $func_q: tt (&self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
         )*
         $(
-            // mutation: $type_m: ident => {$func_m: tt, $cmd_m: tt, $conv_m: tt, $rep_m: tt},
-            mutation: $type_m: ident => fn $func_m: tt (&self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: tt>; in: $($conv_m: ty),*; out: $gql_m: tt;
-            // ($conv_m: tt, $gql_m: tt),
+            mutation: $type_m: ident => fn $func_m: tt (&self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),* $(; out: $gql_m: ty)?;
         )*
     ) => {   
         use std::convert::{TryInto,Into};
         use juniper::{FieldResult,graphql_object};
         use serde_json::*;
+        use crate::Subsystem;
 
         // GraphQl Query Implementation
         // (previously found in schema.rs)
@@ -47,7 +39,7 @@ macro_rules! service_macro {
             $(                                 
                 field $func_q(&executor $(, $msg_q: $conv_q)*) -> FieldResult<String> {
                     Ok(serde_json::to_string(
-                        &$gql_q::from(
+                        &<($($gql_q)*)>::from(
                             executor
                                 .context()
                                 .subsystem()
@@ -85,7 +77,7 @@ macro_rules! service_macro {
                 // field $func_m(&executor, msg: $cmd_m) -> FieldResult<String> {
                 field $func_m(&executor $(, $msg_m: $conv_m)*) -> FieldResult<String> {
                     Ok(serde_json::to_string(
-                        &$gql_m::from(
+                        &<($($gql_m)*)>::from(
                             executor
                                 .context()
                                 .subsystem()
