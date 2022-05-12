@@ -23,13 +23,13 @@ macro_rules! service_macro {
         //     // generic: $type_e: ident => {$func_e: tt, $cmd_e: tt, $conv_e: tt, $rep_e: tt},
         //     generic: $type_e: ident => fn $func_e: tt (&self, $ign0_e: tt:Generic) -> $ign1_e: tt<$rep_e: tt>; ($conv_e: tt, $gql_e: tt),
         // )*
-        $(
-            // query: $type_q: ident => {$func_q: tt, $conv_q: tt, $cmd_q: tt, $rep_q: tt},
-            query: $type_q: ident => fn $func_q: tt (&self $(, $msg_q: tt:$cmd_q: tt)*) -> $ign1_q: tt<$rep_q: tt>; in: $($conv_q: ty),*; out: $gql_q: tt;
+        // query: $type_q: ident => {$func_q: tt, $conv_q: tt, $cmd_q: tt, $rep_q: tt},
+        // mutation: $type_m: ident => {$func_m: tt, $conv_m: tt, $cmd_m: tt, $rep_m: tt},
+        $(            
+            query: $type_q: ident => fn $func_q: tt (&self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
         )*
         $(
-            // mutation: $type_m: ident => {$func_m: tt, $conv_m: tt, $cmd_m: tt, $rep_m: tt},
-            mutation: $type_m: ident => fn $func_m: tt (&self $(, $msg_m: tt:$cmd_m: tt)*) -> $ign1_m: tt<$rep_m: tt>; in: $($conv_m: ty),*; out: $gql_m: tt;
+            mutation: $type_m: ident => fn $func_m: tt (&self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),* $(; out: $gql_m: ty)?;
         )*
     ) => {    
         // use std::convert::{TryFrom,TryInto};
@@ -83,11 +83,11 @@ macro_rules! service_macro {
         graphql_object!(QueryRoot: Context as "Query" |&self| {            
             $(                 
                 field $func_q(&executor $(, $msg_q: $conv_q)*) -> FieldResult<String> {
-                    let mut cmd = Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q,($($cmd_q::try_from($msg_q)?),*)).unwrap();
+                    let mut cmd = Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q,($(<$cmd_q>::try_from($msg_q)?),*)).unwrap();
                     match udp_passthrough(cmd,executor.context().udp()) {
                         Ok(buf) => {
                             match Command::<CommandID,$rep_q>::parse(&buf) {
-                                Ok(c) => Ok(serde_json::to_string(&$gql_q::from(c.data)).unwrap()),
+                                Ok(c) => Ok(serde_json::to_string(&<($($gql_q)*)>::from(c.data)).unwrap()),
                                 Err(CubeOSError::NoCmd) => Ok(serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()),
                                 Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
                             }
@@ -101,11 +101,11 @@ macro_rules! service_macro {
         graphql_object!(MutationRoot: Context as "Mutation" |&self| {            
             $(                 
                 field $func_m(&executor $(, $msg_m: $conv_m)*) -> FieldResult<String> {
-                    let mut cmd = Command::<CommandID,($($cmd_m),*)>::serialize(CommandID::$type_m,($($cmd_m::try_from($msg_m)?),*)).unwrap();
+                    let mut cmd = Command::<CommandID,($($cmd_m),*)>::serialize(CommandID::$type_m,($(<$cmd_m>::try_from($msg_m)?),*)).unwrap();
                     match udp_passthrough(cmd,executor.context().udp()) {
                         Ok(buf) => {
                             match Command::<CommandID,$rep_m>::parse(&buf) {
-                                Ok(c) => Ok(serde_json::to_string(&$gql_m::from(c.data)).unwrap()),
+                                Ok(c) => Ok(serde_json::to_string(&<($($gql_m)*)>::from(c.data)).unwrap()),
                                 Err(CubeOSError::NoCmd) => Ok(serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()),
                                 Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
                             }

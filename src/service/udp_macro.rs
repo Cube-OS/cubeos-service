@@ -21,8 +21,8 @@
 macro_rules! service_macro {
     (
         $(
-            $ign3: tt: $type: ident => fn $func: tt (&self $(,$ign0: tt: $cmd: tt)*) -> $ign1: tt<$rep: ty>; in: $($conv_q: ty),*; out: $gql_q: tt;
-        )+
+            $(query)?$(mutation)?: $type: ident => fn $func: tt (&self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
+        )*
     ) => {
         use command_id::*;
         use std::env::Args;
