@@ -23,7 +23,7 @@ use std::convert::TryFrom;
 
 // Struct that enables deserializing of incoming Vec<u8> msgs
 // into data structures specified in the API or Service
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize, Debug)]
 pub struct Command<C,T> {
     // SpacePacket Command-ID retained for future use
     pub id: C,
@@ -60,17 +60,5 @@ impl<'a,C: TryFrom<u16>, T: Serialize + Deserialize<'a>> Command<C,T>
         buf.append(&mut u16::try_from(id)?.to_be_bytes().to_vec());
         buf.append(&mut bincode::serialize(&msg)?);
         Ok(buf)
-    }
-}
-
-// Empty data type used for functions (queries) that don't 
-// require input data, e.g. ping()
-#[derive(Serialize,Deserialize)]
-pub struct Generic {
-    pub gen: (),
-}
-impl Generic {
-    pub fn new() -> Self {
-        Self{gen:()}
     }
 }

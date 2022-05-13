@@ -41,7 +41,12 @@ macro_rules! service_macro {
 
         use command_id::*;
 
-        command_id!{$($type_q,)*$($type_m,)*}
+        command_id!{
+            LastCmd,
+            LastErr,
+            $($type_q,)*
+            $($type_m,)*
+        }
         
         // function to connect to and send UDP messages to the satellite
         // binds socket and sends to target addresses specified in the config.toml file
@@ -81,6 +86,30 @@ macro_rules! service_macro {
         pub type Context = cubeos_service::Context;
         pub struct QueryRoot;    
         graphql_object!(QueryRoot: Context as "Query" |&self| {            
+            field get_last_cmd(&executor) -> FieldResult<String> {
+                let mut cmd = Command::<CommandID,()>::serialize(CommandID::LastCmd,()).unwrap();
+                match udp_passthrough(cmd,executor.context().udp()) {
+                    Ok(buf) => {
+                        match Command::<CommandID,Vec<u8>>::parse(&buf) {
+                            Ok(c) => Ok(serde_json::to_string(&c.data).unwrap()),
+                            Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
+                        }
+                    }
+                    Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
+                }
+            }
+            field get_last_err(&executor) -> FieldResult<String> {
+                let mut cmd = Command::<CommandID,()>::serialize(CommandID::LastErr,()).unwrap();
+                match udp_passthrough(cmd,executor.context().udp()) {
+                    Ok(buf) => {
+                        match Command::<CommandID,CubeOSError>::parse(&buf) {
+                            Ok(c) => Ok(serde_json::to_string(&c.data).unwrap()),
+                            Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
+                        }
+                    }
+                    Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
+                }
+            }
             $(                 
                 field $func_q(&executor $(, $msg_q: $conv_q)*) -> FieldResult<String> {
                     let mut cmd = Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q,($(<$cmd_q>::try_from($msg_q)?),*)).unwrap();

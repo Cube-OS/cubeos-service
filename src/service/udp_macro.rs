@@ -28,19 +28,55 @@ macro_rules! service_macro {
         use std::env::Args;
         use crate::subsystem::*;
 
-        command_id!{$($type,)*}    
+        command_id!{
+            LastCmd,
+            LastErr,
+            $($type,)*
+        }
+
+        impl Last for Subsystem {
+            fn set_last_cmd(&self, input: Vec<u8>) {
+                if let Ok(mut last_cmd) = self.last_cmd.write() {
+                    *last_cmd = input;
+                }
+            }
+            fn get_last_cmd(&self) -> CubeOSResult<Vec<u8>> {
+                Ok(self.last_cmd.read().unwrap().to_vec()) 
+            }
+            fn set_last_err(&self, err: CubeOSError) {
+                if let Ok(mut last_err) = self.last_err.write() {
+                    *last_err = err;
+                }
+            }
+            fn get_last_err(&self) -> CubeOSResult<CubeOSError> {
+                Ok(self.last_err.read().unwrap().clone())
+            }
+        }
 
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
         pub fn udp_handler(sub: &Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
             // Verify CommandID            
-            match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {                
+            match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
+                CommandID::LastCmd => {
+                    Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
+                },
+                CommandID::LastErr => {
+                    Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
+                }             
                 $(CommandID::$type => {
+                    sub.set_last_cmd(msg.to_vec());
                     // Parse Command
                     let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
                     // Serialize 
                     let data = command.data;
-                    Command::<CommandID,$rep>::serialize(command.id,(run!(Subsystem::$func; sub, data $(,$cmd)*))?)                                        
+                    match Command::<CommandID,$rep>::serialize(command.id,(run!(Subsystem::$func; sub, data $(,$cmd)*))?) {
+                        Ok(x) => Ok(x),
+                        Err(e) => {
+                            sub.set_last_err(e.clone());
+                            Err(CubeOSError::from(e))
+                        }
+                    }
                 },)* 
             }
         }

@@ -26,47 +26,72 @@ macro_rules! service_macro {
             mutation: $type_m: ident => fn $func_m: tt (&self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),* $(; out: $gql_m: ty)?;
         )*
     ) => {   
-        use std::convert::{TryInto,Into};
+        // use std::convert::{TryInto,Into};
         use juniper::{FieldResult,graphql_object};
         use serde_json::*;
         use crate::Subsystem;
+        use command_id::*;
+        
+        command_id!{
+            LastCmd,
+            LastErr,
+            $($type_q,)*
+            $($type_m,)*
+        }
+
+        impl Last for Subsystem {
+            fn set_last_cmd(&self, input: Vec<u8>) {
+                if let Ok(mut last_cmd) = self.last_cmd.write() {
+                    *last_cmd = input;
+                }
+            }
+            fn get_last_cmd(&self) -> CubeOSResult<Vec<u8>> {
+                Ok(self.last_cmd.read().unwrap().to_vec()) 
+            }
+            fn set_last_err(&self, err: CubeOSError) {
+                if let Ok(mut last_err) = self.last_err.write() {
+                    *last_err = err;
+                }
+            }
+            fn get_last_err(&self) -> CubeOSResult<CubeOSError> {
+                Ok(self.last_err.read().unwrap().clone())
+            }
+        }
 
         // GraphQl Query Implementation
         // (previously found in schema.rs)
         pub type Context = cubeos_service::Context<Box<Subsystem>>;
         pub struct QueryRoot;    
-        graphql_object!(QueryRoot: Context as "Query" |&self| {            
+        graphql_object!(QueryRoot: Context as "Query" |&self| { 
+            field get_last_cmd(&executor) -> FieldResult<String> {
+                Ok(serde_json::to_string(&executor.context().subsystem().get_last_cmd().unwrap()).unwrap())
+            }
+            field get_last_err(&executor) -> FieldResult<String> {
+                Ok(serde_json::to_string(&executor.context().subsystem().get_last_err().unwrap()).unwrap())
+            }            
             $(                                 
                 field $func_q(&executor $(, $msg_q: $conv_q)*) -> FieldResult<String> {
-                    Ok(serde_json::to_string(
-                        &<($($gql_q)*)>::from(
-                            executor
-                                .context()
-                                .subsystem()
-                                .$func_q($($msg_q.try_into().unwrap()),*)
-                                .unwrap()
-                            )
-                        )
-                        .unwrap()                      
-                    )
+                    executor.context().subsystem().set_last_cmd(Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q,($(<$cmd_q>::try_from($msg_q.clone())?),*)).unwrap());
+                    match executor.context().subsystem().$func_q($($msg_q.try_into().unwrap()),*) {
+                        Ok(x) => Ok(serde_json::to_string(&<($($gql_q)*)>::from(x)).unwrap()),
+                        Err(e) => {
+                            executor.context().subsystem().set_last_err(e.clone());
+                            Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap())
+                        },
+                    }
+                    // Ok(serde_json::to_string(
+                    //     &<($($gql_q)*)>::from(
+                    //         executor
+                    //             .context()
+                    //             .subsystem()
+                    //             .$func_q($($msg_q.try_into().unwrap()),*)
+                    //             .unwrap()
+                    //         )
+                    //     )
+                    //     .unwrap()                      
+                    // )
                 }            
             )*
-            // $(
-            //     field $func_e(&executor) -> FieldResult<String> {
-            //         // let msg: Generic = Generic{gen:()};
-            //         Ok(serde_json::to_string(
-            //             &$gql_e::from(
-            //                 executor
-            //                     .context()
-            //                     .subsystem()
-            //                     .$func_e(Generic{gen:()})
-            //                     .unwrap()
-            //                 )
-            //             )
-            //             .unwrap()                        
-            //         )
-            //     }
-            // )*
         });
         
         // GraphQL Mutation implementation
@@ -76,17 +101,25 @@ macro_rules! service_macro {
             $(                 
                 // field $func_m(&executor, msg: $cmd_m) -> FieldResult<String> {
                 field $func_m(&executor $(, $msg_m: $conv_m)*) -> FieldResult<String> {
-                    Ok(serde_json::to_string(
-                        &<($($gql_m)*)>::from(
-                            executor
-                                .context()
-                                .subsystem()
-                                .$func_m($($msg_m.try_into().unwrap()),*)
-                                .unwrap()
-                            )
-                        )
-                        .unwrap()
-                    )
+                    executor.context().subsystem().set_last_cmd(Command::<CommandID,($($cmd_m),*)>::serialize(CommandID::$type_m,($(<$cmd_m>::try_from($msg_m.clone())?),*)).unwrap());
+                    match executor.context().subsystem().$func_m($($msg_m.try_into().unwrap()),*) {
+                        Ok(x) => Ok(serde_json::to_string(&<($($gql_m)*)>::from(x)).unwrap()),
+                        Err(e) => {
+                            executor.context().subsystem().set_last_err(e.clone());
+                            Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap())
+                        },
+                    }
+                    // Ok(serde_json::to_string(
+                    //     &<($($gql_m)*)>::from(
+                    //         executor
+                    //             .context()
+                    //             .subsystem()
+                    //             .$func_m($($msg_m.try_into().unwrap()),*)
+                    //             .unwrap()
+                    //         )
+                    //     )
+                    //     .unwrap()
+                    // )
                 }            
             )*
         });

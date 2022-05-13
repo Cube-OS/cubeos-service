@@ -128,19 +128,11 @@ use std::ops::AddAssign;
 
 mod service;
 mod command;
-mod response;
+mod last;
 
-pub use crate::response::*;
+pub use crate::last::*;
 pub use crate::service::*;
 // pub use crate::command::{Generic};
-pub use crate::command::{Command, Generic};
+pub use crate::command::Command;
 pub use kubos_system::logger as Logger;
 pub use kubos_system::Config;
-
-// helper functions to implement the TryFrom<u16> for udp and ground macros
-// increments a usize and outputs the value
-// needed to increment a counter inside the macro expression $()+ 
-pub fn increment(i: &mut usize) -> usize {
-    i.add_assign(1);
-    *i-1
-}
