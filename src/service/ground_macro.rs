@@ -155,10 +155,11 @@ macro_rules! service_macro {
                 let mut cmd = Command::<CommandID,()>::serialize(CommandID::LastErr,()).unwrap();
                 match udp_passthrough(cmd,executor.context().udp()) {
                     Ok(buf) => {
-                        match Command::<CommandID,CubeOSError>::parse(&buf) {
-                            Ok(c) => Ok(serde_json::to_string(&c.data).unwrap()),
-                            Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
-                        }
+                        Ok(serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..]).unwrap())).unwrap())
+                        // match Command::<CommandID,CubeOSError>::parse(&buf) {
+                        //     Ok(c) => Ok(serde_json::to_string(&c.data).unwrap()),
+                        //     Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
+                        // }
                     }
                     Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
                 }
