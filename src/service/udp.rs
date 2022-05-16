@@ -180,8 +180,19 @@ impl <T: Clone> Service<T> {
             match socket.recv_from(&mut buf) {
                 Ok((b,a)) => {
                     match udp_handler(&sub,&mut buf[..b].to_vec()){
-                        Ok(x) => socket.send_to(&x,&a).expect("couldn't send"),
-                        Err(e) => socket.send_to(&handle_err(&e),&a).expect("couldn't send"),
+                        Ok(x) => {                            
+                            println!("{:?}",&x);
+                            match socket.send_to(&x,&a) {
+                                Ok(m) => println!("{:?}",m),
+                                Err(_) => println!("Error"),
+                            }
+                        },
+                        Err(e) => {
+                            match socket.send_to(&handle_err(&e),&a) {
+                            Ok(m) => println!("{:?}",m),
+                                Err(_) => println!("Error"),
+                            }
+                        },                        
                     };
                 },
                 Err(_) => continue,

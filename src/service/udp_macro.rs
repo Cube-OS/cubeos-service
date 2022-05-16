@@ -44,6 +44,7 @@ macro_rules! service_macro {
                 Ok(self.last_cmd.read().unwrap().to_vec()) 
             }
             fn set_last_err(&self, err: CubeOSError) {
+                println!("{:?}",err);
                 if let Ok(mut last_err) = self.last_err.write() {
                     *last_err = err;
                 }
@@ -70,13 +71,20 @@ macro_rules! service_macro {
                     let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
                     // Serialize 
                     let data = command.data;
-                    match Command::<CommandID,$rep>::serialize(command.id,(run!(Subsystem::$func; sub, data $(,$cmd)*))?) {
-                        Ok(x) => Ok(x),
+                    match run!(Subsystem::$func; sub, data $(,$cmd)*) {
+                        Ok(x) => Ok(Command::<CommandID,$rep>::serialize(command.id,x)?),
                         Err(e) => {
-                            sub.set_last_err(e.clone());
+                            sub.set_last_err(CubeOSError::from(e.clone()));
                             Err(CubeOSError::from(e))
                         }
                     }
+                    // match Command::<CommandID,$rep>::serialize(command.id,(run!(Subsystem::$func; sub, data $(,$cmd)*))?) {
+                    //     Ok(x) => Ok(x),
+                    //     Err(e) => {
+                    //         sub.set_last_err(CubeOSError::from(e.clone()));
+                    //         Err(CubeOSError::from(e))
+                    //     }
+                    // }
                 },)* 
             }
         }
