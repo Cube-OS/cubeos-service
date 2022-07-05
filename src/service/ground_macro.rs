@@ -42,6 +42,7 @@ macro_rules! service_macro {
         use command_id::*;
 
         command_id!{
+            Ping,
             LastCmd,
             LastErr,
             $($type_q,)*
@@ -137,7 +138,19 @@ macro_rules! service_macro {
         // Translates Serialized responses from the satellite into GraphQL
         pub type Context = cubeos_service::Context;
         pub struct QueryRoot;    
-        graphql_object!(QueryRoot: Context as "Query" |&self| {            
+        graphql_object!(QueryRoot: Context as "Query" |&self| {  
+            field ping(&executor) -> FieldResult<()> {
+                let mut cmd = Command::<CommandID,()>::serialize(CommandID::Ping,()).unwrap();
+                match udp_passthrough(cmd,executor.context().udp()) {
+                    Ok(buf) => {
+                        match Command::<CommandID,()>::parse(&buf) {
+                            Ok(c) => Ok(serde_json::to_string(<&()>::from(c.data)).unwrap()),
+                            Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()), 
+                        }
+                    },
+                    Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
+                }
+            }
             field get_last_cmd(&executor) -> FieldResult<String> {
                 let mut cmd = Command::<CommandID,()>::serialize(CommandID::LastCmd,()).unwrap();
                 match udp_passthrough(cmd,executor.context().udp()) {

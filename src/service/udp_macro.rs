@@ -29,6 +29,7 @@ macro_rules! service_macro {
         use crate::subsystem::*;
 
         command_id!{
+            Ping,
             LastCmd,
             LastErr,
             $($type,)*
@@ -54,11 +55,20 @@ macro_rules! service_macro {
             }
         }
 
+        impl Ping for Subsystem {
+            fn ping(&self) -> CubeOSResult<()> {
+                Ok(())
+            }
+        }
+
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
         pub fn udp_handler(sub: &Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
             // Verify CommandID            
             match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
+                CommandID::Ping => {
+                    Command::<CommandID,()>::serialize(CommandID::Ping,sub.ping()?)
+                },
                 CommandID::LastCmd => {
                     Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
                 },
