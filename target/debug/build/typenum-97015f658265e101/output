@@ -1,2 +1,0 @@
-cargo:rustc-env=TYPENUM_BUILD_CONSTS=/home/patrick/Cube-OS/cubeos-service/target/debug/build/typenum-97015f658265e101/out/consts.rs
-cargo:rustc-env=TYPENUM_BUILD_OP=/home/patrick/Cube-OS/cubeos-service/target/debug/build/typenum-97015f658265e101/out/op.rs
