@@ -33,6 +33,7 @@ macro_rules! service_macro {
         use command_id::*;
         
         command_id!{
+            Ping,
             LastCmd,
             LastErr,
             $($type_q,)*
@@ -63,6 +64,9 @@ macro_rules! service_macro {
         pub type Context = cubeos_service::Context<Box<Subsystem>>;
         pub struct QueryRoot;    
         graphql_object!(QueryRoot: Context as "Query" |&self| { 
+            field ping(&executor) -> FieldResult<String> {
+                Ok(serde_json::to_string(&executor.context().subsystem().ping().unwrap()).unwrap())
+            }
             field get_last_cmd(&executor) -> FieldResult<String> {
                 Ok(serde_json::to_string(&executor.context().subsystem().get_last_cmd().unwrap()).unwrap())
             }

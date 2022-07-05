@@ -42,6 +42,7 @@ macro_rules! service_macro {
         use command_id::*;
 
         command_id!{
+            Ping,
             LastCmd,
             LastErr,
             $($type_q,)*
@@ -80,18 +81,83 @@ macro_rules! service_macro {
             }
         }
 
+        fn parse_last_command(msg: &mut Vec<u8>) -> String {
+            match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]])) {
+                $(Ok(CommandID::$type_q) => {
+                    match Command::<CommandID,($($cmd_q),*)>::parse(msg) {
+                        Ok(x) => serde_json::to_string(&x).unwrap(),
+                        Err(e) => {
+                            let mut s: String = serde_json::to_string(&CommandID::$type_q).unwrap();
+                            msg.remove(0);
+                            msg.remove(0);
+                            $(
+                                s.push_str("\n");
+                                s.push_str(std::any::type_name::<$cmd_q>());
+                                s.push_str(":");
+                                let l: Vec<u8> = msg.drain(..std::mem::size_of::<$cmd_q>()).collect();
+                                match bincode::deserialize::<$cmd_q>(&l) {
+                                    Ok(st) => s.push_str(&serde_json::to_string(&st).unwrap()),
+                                    Err(_) => s.push_str(&serde_json::to_string(&l).unwrap()),
+                                }
+                            )*
+                            s
+                        }
+                    }
+                },)*
+                $(Ok(CommandID::$type_m) => {
+                    match Command::<CommandID,($($cmd_m),*)>::parse(msg) {
+                        Ok(x) => serde_json::to_string(&x).unwrap(),
+                        Err(e) => {
+                            let mut s: String = serde_json::to_string(&CommandID::$type_m).unwrap();
+                            msg.remove(0);
+                            msg.remove(0);
+                            $(
+                                s.push_str("\n");
+                                s.push_str(std::any::type_name::<$cmd_m>());
+                                s.push_str(":");
+                                let l: Vec<u8> = msg.drain(..std::mem::size_of::<$cmd_m>()).collect();                                
+                                match bincode::deserialize::<$cmd_m>(&l) {
+                                    Ok(st) => s.push_str(&serde_json::to_string(&st).unwrap()),
+                                    Err(_) => s.push_str(&serde_json::to_string(&l).unwrap()),
+                                }
+                            )*
+                            s
+                        }
+                    }
+                },)*
+                _ => {
+                    let mut s = serde_json::to_string(&CubeOSError::NoCmd).unwrap();
+                    s.push_str(&serde_json::to_string(&msg).unwrap());
+                    s
+                }
+            }
+        }
+
         // GraphQL interface run on the debug computer
         // Translates GraphQL Inputs into UDP msg and sends these to the satellite
         // Translates Serialized responses from the satellite into GraphQL
         pub type Context = cubeos_service::Context;
         pub struct QueryRoot;    
-        graphql_object!(QueryRoot: Context as "Query" |&self| {            
+        graphql_object!(QueryRoot: Context as "Query" |&self| {  
+            field ping(&executor) -> FieldResult<()> {
+                let mut cmd = Command::<CommandID,()>::serialize(CommandID::Ping,()).unwrap();
+                match udp_passthrough(cmd,executor.context().udp()) {
+                    Ok(buf) => {
+                        match Command::<CommandID,()>::parse(&buf) {
+                            Ok(c) => Ok(serde_json::to_string(<&()>::from(c.data)).unwrap()),
+                            Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()), 
+                        }
+                    },
+                    Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
+                }
+            }
             field get_last_cmd(&executor) -> FieldResult<String> {
                 let mut cmd = Command::<CommandID,()>::serialize(CommandID::LastCmd,()).unwrap();
                 match udp_passthrough(cmd,executor.context().udp()) {
                     Ok(buf) => {
                         match Command::<CommandID,Vec<u8>>::parse(&buf) {
-                            Ok(c) => Ok(serde_json::to_string(&c.data).unwrap()),
+                            // Ok(c) => Ok(serde_json::to_string(&c.data).unwrap()),
+                            Ok(mut c) => Ok(parse_last_command(&mut c.data)),
                             Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
                         }
                     }
@@ -102,10 +168,11 @@ macro_rules! service_macro {
                 let mut cmd = Command::<CommandID,()>::serialize(CommandID::LastErr,()).unwrap();
                 match udp_passthrough(cmd,executor.context().udp()) {
                     Ok(buf) => {
-                        match Command::<CommandID,CubeOSError>::parse(&buf) {
-                            Ok(c) => Ok(serde_json::to_string(&c.data).unwrap()),
-                            Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
-                        }
+                        Ok(serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..]).unwrap())).unwrap())
+                        // match Command::<CommandID,CubeOSError>::parse(&buf) {
+                        //     Ok(c) => Ok(serde_json::to_string(&c.data).unwrap()),
+                        //     Err(e) => Ok(serde_json::to_string(&CubeOSError::from(e)).unwrap()),
+                        // }
                     }
                     Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
                 }
