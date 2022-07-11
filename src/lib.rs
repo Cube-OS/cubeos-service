@@ -129,7 +129,9 @@ use std::ops::AddAssign;
 mod service;
 mod command;
 mod last;
+mod ping;
 
+pub use crate::ping::*;
 pub use crate::last::*;
 pub use crate::service::*;
 // pub use crate::command::{Generic};
