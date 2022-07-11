@@ -14,7 +14,7 @@ kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
 log = "^0.4.0"
 warp = "0.1.12"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
-pkg-config = "= 0.3.15"
+pkg-config = "= 0.3.25"
 failure = "0.1.3"
 variant_count = "1.1"
 cubeos-error = { git = "ssh://git@github.com/Cube-OS/cubeos-error.git"}
