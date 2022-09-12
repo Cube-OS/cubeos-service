@@ -139,12 +139,12 @@ macro_rules! service_macro {
         pub type Context = cubeos_service::Context;
         pub struct QueryRoot;    
         graphql_object!(QueryRoot: Context as "Query" |&self| {  
-            field ping(&executor) -> FieldResult<()> {
+            field ping(&executor) -> FieldResult<String> {
                 let mut cmd = Command::<CommandID,()>::serialize(CommandID::Ping,()).unwrap();
                 match udp_passthrough(cmd,executor.context().udp()) {
                     Ok(buf) => {
                         match Command::<CommandID,()>::parse(&buf) {
-                            Ok(c) => Ok(serde_json::to_string(<&()>::from(c.data)).unwrap()),
+                            Ok(c) => Ok(serde_json::to_string(&<()>::from(c.data)).unwrap()),
                             Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()), 
                         }
                     },
