@@ -11,7 +11,7 @@ serde_repr = "0.1"
 # Freezing this at 0.14.2 for now, future update could require major changes
 juniper = "0.14.2"
 juniper_warp = "0.5.2"
-kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
+kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git", branch = "syslog"}
 log = "^0.4.0"
 warp = "0.1.23"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16

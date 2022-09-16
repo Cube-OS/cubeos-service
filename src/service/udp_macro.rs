@@ -127,4 +127,19 @@ macro_rules! run {
     // 5 input parameter
     ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt, $_cmd5: tt) 
         => {$f($sub,$in.0,$in.1,$in.2,$in.3,$in.4)};
+    // 6 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt, $_cmd5: tt, $_cmd6: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3,$in.4,$in.5)};
+    // 7 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt, $_cmd5: tt, $_cmd6: tt, $_cmd7: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3,$in.4,$in.5,$in.6)};
+    // 8 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt, $_cmd5: tt, $_cmd6: tt, $_cmd7: tt, $_cmd8: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3,$in.4,$in.5,$in.6,$in.7)};
+    // 9 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt, $_cmd5: tt, $_cmd6: tt, $_cmd7: tt, $_cmd8: tt, $_cmd9: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3,$in.4,$in.5,$in.6,$in.7,$in.8)};
+    // 10 input parameter
+    ($f: expr; $sub: tt, $in: tt, $_cmd: tt, $_cmd2: tt, $_cmd3: tt, $_cmd4: tt, $_cmd5: tt, $_cmd6: tt, $_cmd7: tt, $_cmd8: tt, $_cmd9: tt, $_cmd10: tt) 
+        => {$f($sub,$in.0,$in.1,$in.2,$in.3,$in.4,$in.5,$in.6,$in.7,$in.8,$in.9)};
 }
