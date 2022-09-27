@@ -21,7 +21,7 @@
 macro_rules! service_macro {
     (
         $(
-            $(query)?$(mutation)?: $type: ident => fn $func: tt (&self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
+            $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
         )*
     ) => {
         use command_id::*;
