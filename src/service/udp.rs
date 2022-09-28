@@ -28,7 +28,7 @@ use std::sync::{Arc, RwLock};
 use cubeos_error::*;
 
 /// Type definition for a "UDP" server pointer
-pub type UdpFn<T, Vec> = dyn Fn(&T, &mut Vec) -> Result<Vec<>>;
+pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>>;
 
 /// Context struct used by a service to provide,
 /// subsystem access and persistent storage.
@@ -168,7 +168,7 @@ impl <T: Clone> Service<T> {
         
         let mut buf = [0;250];
 
-        let sub = self.context.subsystem.clone();
+        let mut sub = self.context.subsystem.clone();
 
         // loop for UDP handling
         // listens for UDP messages on socket
@@ -179,7 +179,7 @@ impl <T: Clone> Service<T> {
         loop{
             match socket.recv_from(&mut buf) {
                 Ok((b,a)) => {
-                    match udp_handler(&sub,&mut buf[..b].to_vec()){
+                    match udp_handler(&mut sub,&mut buf[..b].to_vec()){
                         Ok(x) => socket.send_to(&x,&a).expect("couldn't send"),
                         Err(e) => socket.send_to(&handle_err(&e),&a).expect("couldn't send"),
                     };
