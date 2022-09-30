@@ -20,10 +20,10 @@
 macro_rules! service_macro {
     (
         $(            
-            query: $type_q: ident => fn $func_q: tt (&self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
+            query: $type_q: ident => fn $func_q: tt (&$(mut )?self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
         )*
         $(
-            mutation: $type_m: ident => fn $func_m: tt (&self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),* $(; out: $gql_m: ty)?;
+            mutation: $type_m: ident => fn $func_m: tt (&$(mut )?self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),* $(; out: $gql_m: ty)?;
         )*
     ) => {   
         // use std::convert::{TryInto,Into};
@@ -56,6 +56,12 @@ macro_rules! service_macro {
             }
             fn get_last_err(&self) -> CubeOSResult<CubeOSError> {
                 Ok(self.last_err.read().unwrap().clone())
+            }
+        }
+
+        impl Ping for Subsystem {
+            fn ping(&self) -> CubeOSResult<()> {
+                Ok(())
             }
         }
 

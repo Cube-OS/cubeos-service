@@ -21,7 +21,7 @@
 macro_rules! service_macro {
     (
         $(
-            $(query)?$(mutation)?: $type: ident => fn $func: tt (&self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
+            $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
         )*
     ) => {
         use command_id::*;
@@ -66,6 +66,7 @@ macro_rules! service_macro {
         pub fn udp_handler(sub: &Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
             #[cfg(feature = "debug")]
             println!("Message: {:?}",msg);
+
             // Verify CommandID            
             match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
                 CommandID::Ping => {
