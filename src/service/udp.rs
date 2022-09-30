@@ -26,6 +26,7 @@ use std::collections::HashMap;
 use std::net::{SocketAddr,UdpSocket};
 use std::sync::{Arc, RwLock};
 use cubeos_error::*;
+use rust_udp::Message;
 
 /// Type definition for a "UDP" server pointer
 pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>>;
@@ -166,7 +167,7 @@ impl <T: Clone> Service<T> {
 
         let socket = UdpSocket::bind(addr).expect("couldn't bind to address");
         
-        let mut buf = [0;250];
+        let mut buf = [0;rust_udp::MAX_BUFFER_SIZE];
 
         let mut sub = self.context.subsystem.clone();
 
@@ -177,13 +178,19 @@ impl <T: Clone> Service<T> {
         #[cfg(feature = "debug")]
         println!("Start listener on: {:?}", socket);
         loop{
-            match socket.recv_from(&mut buf) {
-                Ok((b,a)) => {
-                    match udp_handler(&mut sub,&mut buf[..b].to_vec()){
-                        Ok(x) => socket.send_to(&x,&a).expect("couldn't send"),
-                        Err(e) => socket.send_to(&handle_err(&e),&a).expect("couldn't send"),
-                    };
-                },
+            match socket.recv_msg() {
+                Ok((mut b,a)) => {
+                    match udp_handler(&sub,&mut b) {
+                        Ok(x) => {
+                            #[cfg(feature = "debug")]
+                            println!("Send: {:?} to {:?}",&x,&a);
+                            socket.send_msg(&x,&a).expect("Couldn't send")
+                        }
+                        Err(e) => {
+                            socket.send_to(&handle_err(&e),&a).expect("couldn't send");
+                        }
+                    }
+                }
                 Err(_) => continue,
             };
         }

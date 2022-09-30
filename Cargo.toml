@@ -22,6 +22,7 @@ cubeos-error = { git = "ssh://git@github.com/Cube-OS/cubeos-error.git"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
 hex = "0.4.2"
 command-id = { git = "ssh://git@github.com/Cube-OS/command-id.git"}
+rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
 
 # features enable conditional compiling,
 # features cannot be combined in one compilation
