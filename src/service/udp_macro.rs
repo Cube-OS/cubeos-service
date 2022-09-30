@@ -64,6 +64,8 @@ macro_rules! service_macro {
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
         pub fn udp_handler(sub: &Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
+            #[cfg(feature = "debug")]
+            println!("Message: {:?}",msg);
             // Verify CommandID            
             match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
                 CommandID::Ping => {
@@ -82,7 +84,13 @@ macro_rules! service_macro {
                     // Serialize 
                     let data = command.data;
                     match run!(Subsystem::$func; sub, data $(,$cmd)*) {
-                        Ok(x) => Ok(Command::<CommandID,$rep>::serialize(command.id,x)?),
+                        Ok(x) => {
+                            let r = Command::serialize(command.id,x)?;
+                            #[cfg(feature = "debug")]
+                            println!("Reply: {:?}",r);
+                            // Ok(Command::<CommandID,$rep>::serialize(command.id,x)?),
+                            Ok(r)
+                        }
                         Err(e) => {
                             sub.set_last_err(CubeOSError::from(e.clone()));
                             Err(CubeOSError::from(e))
@@ -98,6 +106,24 @@ macro_rules! service_macro {
                 },)* 
             }
         }
+
+        // #[cfg(feature = "debug")]
+        // trait Debug {
+        //     fn debug();
+        // }
+
+        // #[cfg(feature = "debug")]
+        // impl Debug for Subsystem {
+        #[cfg(feature = "debug")]
+        pub fn debug() {
+            println!("{:?}", CommandID::VARIANT_COUNT);
+            let mut cmd: usize = 0;
+            while cmd <= CommandID::VARIANT_COUNT {
+                println!("{:?}: {:?}", cmd, CommandID::try_from(cmd as u16));
+                cmd = cmd + 1;
+            }
+        }            
+        // }
     };
 }
 
