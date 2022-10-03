@@ -180,7 +180,7 @@ impl <T: Clone> Service<T> {
         loop{
             match socket.recv_msg() {
                 Ok((mut b,a)) => {
-                    match udp_handler(&sub,&mut b) {
+                    match udp_handler(&mut sub,&mut b) {
                         Ok(x) => {
                             #[cfg(feature = "debug")]
                             println!("Send: {:?} to {:?}",&x,&a);

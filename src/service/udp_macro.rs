@@ -63,7 +63,7 @@ macro_rules! service_macro {
 
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
-        pub fn udp_handler(sub: &Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
+        pub fn udp_handler(sub: &mut Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
             #[cfg(feature = "debug")]
             println!("Message: {:?}",msg);
 
