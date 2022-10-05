@@ -29,6 +29,7 @@ rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
 [features]
 default = []
 ground = []
-graphql = []
+# deprecated
+# graphql = []
 # all features can be combined with debug
 debug = []

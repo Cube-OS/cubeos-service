@@ -27,21 +27,24 @@ use std::net::{SocketAddr,UdpSocket};
 use std::sync::{Arc, RwLock};
 use cubeos_error::*;
 use rust_udp::Message;
+use std::thread;
+use std::sync::Mutex;
+use std::time::Duration;
 
 /// Type definition for a "UDP" server pointer
-pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>>;
+pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>> + std::marker::Send + std::marker::Sync + 'static;
 
 /// Context struct used by a service to provide,
 /// subsystem access and persistent storage.
 #[derive(Clone)]
-pub struct Context<T: Clone> {
+pub struct Context<T: Clone + std::marker::Send> {
     ///
     pub subsystem: T,
     ///
     pub storage: Arc<RwLock<HashMap<String, String>>>,
 }
 
-impl<T: Clone> Context<T> {
+impl<T: Clone + std::marker::Send> Context<T> {
     /// Returns a reference to the context's subsystem instance
     pub fn subsystem(&self) -> &T {
         &self.subsystem
@@ -105,7 +108,7 @@ impl<T: Clone> Context<T> {
 /// ).start();
 /// ```
 #[derive(Clone)]
-pub struct Service<T:Clone>{
+pub struct Service<T:Clone + std::marker::Send + 'static>{
 // pub struct Service<T> {
     config: Config,
     context: Context<T>,   
@@ -114,7 +117,7 @@ pub struct Service<T:Clone>{
     udp_handler: Option<Arc<UdpFn<T, Vec<u8>>>>,  
 }
 
-impl <T: Clone> Service<T> {
+impl <T: Clone + std::marker::Send + 'static> Service<T> {
     /// Creates a new service instance
     ///
     /// # Arguments
@@ -163,7 +166,14 @@ impl <T: Clone> Service<T> {
             .unwrap();
         info!("Listening on: {}", addr);
 
-        let udp_handler = self.udp_handler.unwrap();
+        // let mut addresses = [addr; 10];
+        
+        // for i in 0..addresses.len() {
+        //     addresses[i] = SocketAddr::from((addr.ip(),addr.port()+i as u16));
+        //     println!("{:?}", addresses[i]);
+        // }
+
+        let udp_handler = Arc::new(Mutex::new(self.udp_handler.unwrap()));
 
         let socket = UdpSocket::bind(addr).expect("couldn't bind to address");
         
@@ -180,16 +190,23 @@ impl <T: Clone> Service<T> {
         loop{
             match socket.recv_msg() {
                 Ok((mut b,a)) => {
-                    match udp_handler(&mut sub,&mut b) {
-                        Ok(x) => {
-                            #[cfg(feature = "debug")]
-                            println!("Send: {:?} to {:?}",&x,&a);
-                            socket.send_msg(&x,&a).expect("Couldn't send")
+                    let sock = UdpSocket::bind("0.0.0.0:0").expect("couldn't bind to address");
+                    println!("{:?}", sock);
+                    let handler = udp_handler.lock().unwrap().clone();
+                    let mut s = sub.clone();
+                    thread::spawn(move || {
+                        match handler(&mut s,&mut b) {
+                            Ok(x) => {
+                                #[cfg(feature = "debug")]
+                                println!("Send: {:?} to {:?}",&x,&a);
+                                sock.send_msg(&x,&a).expect("Couldn't send")
+                            }
+                            Err(e) => {
+                                sock.send_to(&handle_err(&e),&a).expect("couldn't send");
+                            }
                         }
-                        Err(e) => {
-                            socket.send_to(&handle_err(&e),&a).expect("couldn't send");
-                        }
-                    }
+                    });
+                    continue;
                 }
                 Err(_) => continue,
             };
