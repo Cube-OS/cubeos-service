@@ -63,16 +63,16 @@ macro_rules! service_macro {
             println!("{:?}",to);
             #[cfg(feature = "debug")]
             println!("Cmd: {:?}", cmd);
-            socket.connect(to).expect("Could not connect to satellite");
-            match socket.send(&cmd) {
+            // socket.connect(to).expect("Could not connect to satellite");
+            match socket.send_msg(&cmd,to) {
                 Ok(_) => {
                     #[cfg(feature = "debug")]
                     println!("Sending");
-                    match socket.recv(&mut buf) {
-                        Ok(x) => {
+                    match socket.recv_msg() {
+                        Ok((b,a)) => {
                             #[cfg(feature = "debug")]
-                            println!("Received: {:?}", buf[..x].to_vec());
-                            Ok(buf[..x].to_vec())
+                            println!("Received: {:?}", b);
+                            Ok(b)
                         },
                         Err(_) => Err(CubeOSError::NoCmd),
                     }
