@@ -38,7 +38,7 @@ macro_rules! service_macro {
         use juniper::{FieldResult,graphql_object};
         use std::net::UdpSocket;
         use serde_json::to_string;
-        use rust_udp::Message;
+        use cubeos_service::rust_udp::Message;
 
         use command_id::*;
 
