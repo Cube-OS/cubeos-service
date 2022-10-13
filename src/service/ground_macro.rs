@@ -59,13 +59,11 @@ macro_rules! service_macro {
                 Err(_) => Err(CubeOSError::NoCmd),
             };
             let socket = s.unwrap();
-            let to = udp.to;
             #[cfg(feature = "debug")]
-            println!("{:?}",to);
+            println!("{:?}",udp.to);
             #[cfg(feature = "debug")]
             println!("Cmd: {:?}", cmd);
-            // socket.connect(to).expect("Could not connect to satellite");
-            match socket.send_msg(&cmd,to) {
+            match socket.send_msg(&cmd,&udp.to) {
                 Ok(_) => {
                     #[cfg(feature = "debug")]
                     println!("Sending");
