@@ -4,26 +4,29 @@ This is an overhaul of the kubos-service. The main goal for this crate was to li
 which is achieved by substituting the original GraphQL commands with a simpler command handler via UDP.
 
 The performance improvement comes with the sacrifice of the debugging qualities of GraphQL.
-For this purpose the service has been redeveloped around the `service_macro!` to give the user the decision of 
-lightweight UDP or GraphQL command handling at compile time. The UDP Handler is enabled by default. 
+For this purpose the service has been redeveloped around the `service_macro!` to replace the GraphQL server on the satellite 
+with a lightweight UDP Handler. Instead the GraphQL server is now run on the Ground Station. This ground mode can be compiled
+from the same source by using the `--features ground` flag.
 
-To compensate for the loss of GraphQL on the satellite, the cubeos-service comes with a third compilation option, called Ground.
-The ground mode is run on a computer connected to the satellite, where it hosts a GraphQL Server. GraphQL inputs are translated 
-to the UDP command and sent to the satellite. The satellite's reply is then translated into JSON. This enables the user to have
-the usual human readable handling of GraphQL and the performance advantage of the UDP handling.
+The ground service translates GraphQL inputs to UDP commands and forwards them to the satellite. The satellite's reply is 
+then translated into JSON. This enables the user to have the usual human readable handling of GraphQL and the performance 
+advantage of the UDP handling.
 
 Additionally the debug feature enables some terminal printouts.
 
 ## service_macro!
-** The use of the service-macro! is not necessary if you only wish to use the GraphQL functionality **
 The `service_macro!` has the following structure:
 ```
 service_macro!{
-  query: $cmdid0 => fn function0(&self, $Inputs) -> Result<$Reply>; in: $GqlInput; out: $GqlReply;
-  mutation: $cmdid1 => fn function1(&self, $Inputs) -> Result<$Reply>; in: $GqlInput; out: $GqlReply;
+  $krate::$strukt {
+    query: $cmdid0 => fn function0(&self, $Inputs) -> Result<$Reply>; in: $GqlInput; out: $GqlReply;
+    mutation: $cmdid1 => fn function1(&self, $Inputs) -> Result<$Reply>; in: $GqlInput; out: $GqlReply;
+  }
 }
 ```
-Where `$Input(s)` are the arguments for `function\_()` (leave blank if `function\_()` has no arguments). The whole part `fn function_(&self, args) -> Result<$Reply>` can be copied from the implementation of the function in the `subsytem.rs`. 
+`$krate::$strukt` is the crate name and name of the struct (e.g. `subsystem::Subsystem`) containing the functions to be exposed by the Service.
+
+`$Input(s)` are the arguments for `function\_()` (leave blank if `function\_()` has no arguments). The whole part `fn function_(&self, args) -> Result<$Reply>` can be copied from the implementation of the function in the `subsytem.rs`. 
 
 The denominators query and mutation are needed to differentiate between the commands in the Ground and GraphQL use cases.
 
@@ -100,20 +103,6 @@ Service::new(
 ).start();
 ```
 
-For GraphQL, the Service is unchanged to the original in the kubos-service, and consists of
-Config, Subsystem, QueryRoot and MutationRoot: 
-```
-#[cfg(feature = "graphql")]
-// Start up graphql server
-Service::new(
-    service_config,
-    subsystem,
-    QueryRoot,
-    MutationRoot,
-)
-.start();
-```
-
 ## Compile your service (requires rust 1.55.0 or above)
 As shown above, **cubeos-service** uses features so the user can decide the use case at compile time.
 
@@ -121,17 +110,10 @@ As shown above, **cubeos-service** uses features so the user can decide the use 
 
 `cargo build`
 
-or with cross compiler
+or with cross compiler (requires KubOS SDK)
 
-`cargo kubos -c build --target kubos-linux-isis-gcc -- --release` (requires KubOS SDK)
-
-**GraphQL:**
-
-`cargo build --features graphql`
-
-or with cross complier 
-
-`cargo kubos -c build --target kubos-linux-isis-gcc -- --release --features graphql` 
+`cargo kubos -c build --target kubos-linux-isis-gcc -- --release` (for ISISpace iOBC)
+`cargo kubos -c build --target kubos-linux-beaglebone-gcc -- --release` (for Beaglebone Black)
 
 **Ground:**
 
@@ -146,9 +128,17 @@ To run a service simply transfer the executable to the satellite or ground stati
 
 `./executable`
 
-This requires a config file `/etc/kubos-config.toml`. Alternatively run the executable with the -c flag to specify a config file:
+This requires a config file, in Kubos/Cube-OS this is commonly stored under `/etc/kubos-config.toml`. 
+Alternatively run the executable with the -c flag to specify a config file:
 
-`./executable -c path/to/config`
+`./executable -c /path/to/config`
+
+### Run the Ground Service
+Run the ground service on a computer connected to your OBC via SLIP or Ethernet or a radio link (which simulates an IP network) with:
+`./ground_executable -c /path/to/config`
+
+To open the GraphQL environment, use your browser to navigate to:
+`$IP:$port/graphiql`
 
 ## Troubleshooting
 CubeOS uses git ssh URL's for dependencies within the Organisation. Pls make sure to add your to the repository:

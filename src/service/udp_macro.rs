@@ -20,13 +20,15 @@
 #[macro_export]
 macro_rules! service_macro {
     (
-        $(
-            $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
-        )*
+        $krate: tt ::$strukt: tt {
+            $(
+                $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
+            )*
+        }
     ) => {
-        use command_id::*;
+        use cubeos_service::command_id::*;
         use std::env::Args;
-        use crate::subsystem::*;
+        use crate::$krate::$strukt as Subsystem;
 
         command_id!{
             Ping,
@@ -97,24 +99,10 @@ macro_rules! service_macro {
                             Err(CubeOSError::from(e))
                         }
                     }
-                    // match Command::<CommandID,$rep>::serialize(command.id,(run!(Subsystem::$func; sub, data $(,$cmd)*))?) {
-                    //     Ok(x) => Ok(x),
-                    //     Err(e) => {
-                    //         sub.set_last_err(CubeOSError::from(e.clone()));
-                    //         Err(CubeOSError::from(e))
-                    //     }
-                    // }
                 },)* 
             }
         }
 
-        // #[cfg(feature = "debug")]
-        // trait Debug {
-        //     fn debug();
-        // }
-
-        // #[cfg(feature = "debug")]
-        // impl Debug for Subsystem {
         #[cfg(feature = "debug")]
         pub fn debug() {
             println!("{:?}", CommandID::VARIANT_COUNT);
@@ -124,7 +112,6 @@ macro_rules! service_macro {
                 cmd = cmd + 1;
             }
         }            
-        // }
     };
 }
 

@@ -29,7 +29,6 @@ use cubeos_error::*;
 use rust_udp::Message;
 use std::thread;
 use std::sync::Mutex;
-use std::time::Duration;
 
 /// Type definition for a "UDP" server pointer
 pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>> + std::marker::Send + std::marker::Sync + 'static;
@@ -176,10 +175,8 @@ impl <T: Clone + std::marker::Send + 'static> Service<T> {
         let udp_handler = Arc::new(Mutex::new(self.udp_handler.unwrap()));
 
         let socket = UdpSocket::bind(addr).expect("couldn't bind to address");
-        
-        let mut buf = [0;rust_udp::MAX_BUFFER_SIZE];
 
-        let mut sub = self.context.subsystem.clone();
+        let sub = self.context.subsystem.clone();
 
         // loop for UDP handling
         // listens for UDP messages on socket

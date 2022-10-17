@@ -19,11 +19,11 @@
 // Define which implementation of the Service and service-macro!
 // are used depending on the selected feature
 
-#[cfg(not(any(feature = "graphql", feature = "ground")))]
+#[cfg(not(feature = "ground"))]
 mod udp;
-#[cfg(not(any(feature = "graphql", feature = "ground")))]
+#[cfg(not(feature = "ground"))]
 mod udp_macro;
-#[cfg(not(any(feature = "graphql", feature = "ground")))]
+#[cfg(not(feature = "ground"))]
 pub use udp::{Context,Service};
 
 #[cfg(feature = "ground")]

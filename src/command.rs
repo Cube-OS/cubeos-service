@@ -16,9 +16,8 @@
 // Contributed by: Patrick Oppel (patrick.oppel94@gmail.com)
 // 
 
-use cubeos_error::{Error, Result};
+use cubeos_error::Result;
 use serde::{Serialize,Deserialize};
-use std::mem::size_of;
 use std::convert::TryFrom;
 
 // Struct that enables deserializing of incoming Vec<u8> msgs

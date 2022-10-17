@@ -114,7 +114,6 @@
 //! ```
 //! 
 //! 
-pub use ::variant_count;
 pub use ::bincode;
 pub use ::serde_json;
 pub use ::command_id;
@@ -123,9 +122,9 @@ pub use ::rust_udp;
 pub use ::serde;
 pub use ::cubeos_error;
 pub use ::std::convert;
-pub use ::juniper;
 
-use std::ops::AddAssign;
+#[cfg(feature = "ground")]
+pub use ::juniper;
 
 mod service;
 mod command;

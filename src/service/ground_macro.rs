@@ -19,28 +19,24 @@
 #[macro_export]
 macro_rules! service_macro {
     (
-        // $(
-        //     // generic: $type_e: ident => {$func_e: tt, $cmd_e: tt, $conv_e: tt, $rep_e: tt},
-        //     generic: $type_e: ident => fn $func_e: tt (&self, $ign0_e: tt:Generic) -> $ign1_e: tt<$rep_e: tt>; ($conv_e: tt, $gql_e: tt),
-        // )*
-        // query: $type_q: ident => {$func_q: tt, $conv_q: tt, $cmd_q: tt, $rep_q: tt},
-        // mutation: $type_m: ident => {$func_m: tt, $conv_m: tt, $cmd_m: tt, $rep_m: tt},
-        $(            
-            query: $type_q: ident => fn $func_q: tt (&$(mut )?self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
-        )*
-        $(
-            mutation: $type_m: ident => fn $func_m: tt (&$(mut )?self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),* $(; out: $gql_m: ty)?;
-        )*
+        $krate: tt ::$strukt: tt {
+            $(            
+                query: $type_q: ident => fn $func_q: tt (&$(mut )?self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
+            )*
+            $(
+                mutation: $type_m: ident => fn $func_m: tt (&$(mut )?self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),* $(; out: $gql_m: ty)?;
+            )*
+        }
     ) => {    
         // use std::convert::{TryFrom,TryInto};
-        // use variant_count::VariantCount;
         // use cubeos_error::{Error as CubeOSError, Result as CubeOSResult};
-        use juniper::{FieldResult,graphql_object};
+        use cubeos_service::juniper::{FieldResult,graphql_object};
         use std::net::UdpSocket;
-        use serde_json::to_string;
+        use cubeos_service::serde_json::to_string;
         use cubeos_service::rust_udp::Message;
+        use cubeos_service::bincode;
 
-        use command_id::*;
+        use cubeos_service::command_id::*;
 
         command_id!{
             Ping,
