@@ -172,7 +172,8 @@ impl <T: Clone + std::marker::Send + 'static> Service<T> {
         //     println!("{:?}", addresses[i]);
         // }
 
-        let udp_handler = Arc::new(Mutex::new(self.udp_handler.unwrap()));
+        // let udp_handler = Arc::new(Mutex::new(self.udp_handler.unwrap()));
+        let udp_handler = self.udp_handler.unwrap();
 
         let socket = UdpSocket::bind(addr).expect("couldn't bind to address");
 
@@ -189,7 +190,8 @@ impl <T: Clone + std::marker::Send + 'static> Service<T> {
                 Ok((mut b,a)) => {
                     let sock = UdpSocket::bind("0.0.0.0:0").expect("couldn't bind to address");
                     println!("{:?}", sock);
-                    let handler = udp_handler.lock().unwrap().clone();
+                    // let handler = udp_handler.lock().unwrap().clone();
+                    let handler = udp_handler.clone();
                     let mut s = sub.clone();
                     thread::spawn(move || {
                         match handler(&mut s,&mut b) {

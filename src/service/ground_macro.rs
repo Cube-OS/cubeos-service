@@ -178,8 +178,13 @@ macro_rules! service_macro {
                     match udp_passthrough(cmd,executor.context().udp()) {
                         Ok(buf) => {
                             match Command::<CommandID,$rep_q>::parse(&buf) {
-                                Ok(c) => Ok(serde_json::to_string(&<($($gql_q)*)>::from(c.data)).unwrap()),
-                                Err(CubeOSError::NoCmd) => Ok(serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()),
+                                Ok(c) => {
+                                    match c.id {
+                                        Error => Ok(serde_json::to_string(&<CubeOSError>::from(c.data)).unwrap()),
+                                        _ => Ok(serde_json::to_string(&<($($gql_q)*)>::from(c.data)).unwrap()),
+                                    }                                    
+                                }
+                                // Err(CubeOSError::NoCmd) => Ok(serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()),
                                 Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
                             }
                         }
@@ -196,7 +201,12 @@ macro_rules! service_macro {
                     match udp_passthrough(cmd,executor.context().udp()) {
                         Ok(buf) => {
                             match Command::<CommandID,$rep_m>::parse(&buf) {
-                                Ok(c) => Ok(serde_json::to_string(&<($($gql_m)*)>::from(c.data)).unwrap()),
+                                Ok(c) => {
+                                    match c.id {
+                                        Error => Ok(serde_json::to_string(&<CubeOSError>::from(c.data)).unwrap()),
+                                        _ => Ok(serde_json::to_string(&<($($gql_m)*)>::from(c.data)).unwrap()),
+                                    }                                    
+                                }
                                 Err(CubeOSError::NoCmd) => Ok(serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()),
                                 Err(err) => Ok(serde_json::to_string(&CubeOSError::from(err)).unwrap()),
                             }
