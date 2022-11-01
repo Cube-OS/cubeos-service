@@ -47,8 +47,8 @@ impl<'a,C: TryFrom<u16>, T: Serialize + Deserialize<'a>> Command<C,T>
         
         match u16::from_be_bytes([msg[0],msg[1]]) {
             0 => Err(Error::from(bincode::deserialize::<Error>(&msg[2..])?)),
-            id => Ok(Command{id: C::try_from(id)?,data: bincode::deserialize(&msg[2..])?}),
             65535 => Err(Error::from(bincode::deserialize::<Error>(&msg[2..])?)),
+            id => Ok(Command{id: C::try_from(id)?,data: bincode::deserialize(&msg[2..])?}),            
         }
     }
 
