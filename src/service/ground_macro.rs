@@ -53,7 +53,7 @@ macro_rules! service_macro {
         })*
 
         $(#[derive(GraphQLObject)]
-        pub struct $type_m {
+        pub struct MutResponse {
             success: bool,
             err: String,
         })*
@@ -206,17 +206,17 @@ macro_rules! service_macro {
         pub struct MutationRoot;  
         graphql_object!(MutationRoot: Context as "Mutation" |&self| {            
             $(     
-                field $func_m(&executor $(, $msg_m: $conv_m)*) -> FieldResult<$type_m> {
+                field $func_m(&executor $(, $msg_m: $conv_m)*) -> FieldResult<MutResponse> {
                     let mut cmd = Command::<CommandID,($($cmd_m),*)>::serialize(CommandID::$type_m,($(<$cmd_m>::try_from($msg_m)?),*)).unwrap();
                     match udp_passthrough(cmd,executor.context().udp()) {
                         Ok(buf) => {
                             match Command::<CommandID,$rep_m>::parse(&buf) {
-                                Ok(c) => Ok($type_m{success: true,err: "".to_string()}),
-                                Err(CubeOSError::NoCmd) => Ok($type_m{success: false, err: serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()}),
-                                Err(err) => Ok($type_m{success: false, err: serde_json::to_string(&CubeOSError::from(err)).unwrap()}),
+                                Ok(c) => Ok(MutResponse{success: true,err: "".to_string()}),
+                                Err(CubeOSError::NoCmd) => Ok(MutResponse{success: false, err: serde_json::to_string(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()}),
+                                Err(err) => Ok(MutResponse{success: false, err: serde_json::to_string(&CubeOSError::from(err)).unwrap()}),
                             }
                         }
-                        Err(err) => Ok($type_m{success: false, err: serde_json::to_string(&CubeOSError::from(err)).unwrap()}),                  
+                        Err(err) => Ok(MutResponse{success: false, err: serde_json::to_string(&CubeOSError::from(err)).unwrap()}),                  
                     }
                 },
             )*
