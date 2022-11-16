@@ -52,11 +52,11 @@ macro_rules! service_macro {
             err: String,
         })*
 
-        $(#[derive(GraphQLObject)]
+        #[derive(GraphQLObject)]
         pub struct MutResponse {
             success: bool,
             err: String,
-        })*
+        }
         // $(
         //     m_struct!($type_m, $($gql_m)?);
         // )*
