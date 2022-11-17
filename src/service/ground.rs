@@ -170,7 +170,8 @@ impl Service {
         // let context = warp::any().map(move || context.clone()).boxed();
         let context = warp::body::content_length_limit(1024*1024)
             .and(warp::body::json())
-            .map(|| context.clone()).boxed();
+            .map(|context| {context});
+            // .map(|| context.clone()).boxed();
 
         let graphql_filter = juniper_warp::make_graphql_filter(root_node, context);
 
