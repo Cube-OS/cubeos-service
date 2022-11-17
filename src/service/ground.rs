@@ -136,7 +136,7 @@ impl Context {
 pub struct Service {
     config: Config,
     ///
-    pub filter: BoxedFilter<(warp::http::response::Response<std::vec::Vec<u8>>,)>,
+    pub filter: BoxedFilter<(warp::http::response::Response<String>,)>,
 }
 
 impl Service {
@@ -167,24 +167,24 @@ impl Service {
         };
 
         // Make the subsystem and other persistent data available to all endpoints
-        // let context = warp::any().map(move || context.clone()).boxed();
-        let context = warp::body::content_length_limit(1024*1024)
-            .and(warp::body::json())
-            .map(|context| {context});
+        let context = warp::any().map(move || context.clone()).boxed();
+        // let context = warp::body::content_length_limit(1024*1024)
+        //     .and(warp::body::json())
+        //     .map(|context| {context});
             // .map(|| context.clone()).boxed();
 
         let graphql_filter = juniper_warp::make_graphql_filter(root_node, context);
 
         // If the path ends in "graphiql" process the request using the graphiql interface
-        let filter = warp::path("graphiql")
-            .and(juniper_warp::graphiql_filter("/graphql"))
-            // Otherwise, just process the request as normal GraphQL
-            .or(graphql_filter)
-            // Wrap it all up nicely so we can save the filter for later
-            .unify()
-            .boxed();
+        // let filter = warp::path("graphiql")
+        //     .and(juniper_warp::graphiql_filter("/graphql"))
+        //     // Otherwise, just process the request as normal GraphQL
+        //     .or(graphql_filter)
+        //     // Wrap it all up nicely so we can save the filter for later
+        //     .unify()
+        //     .boxed();
 
-        Service { config, filter }
+        Service { config, filter: graphql_filter }
     }
 
     /// Starts the service's GraphQL/UDP server. This function runs

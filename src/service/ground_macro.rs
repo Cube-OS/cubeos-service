@@ -173,17 +173,17 @@ macro_rules! service_macro {
                 }
             }
             $(                 
-                field $func_q(&executor $(, $msg_q: $conv_q)*) -> FieldResult<String> {
-                    let mut cmd = Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q,($(<$cmd_q>::try_from($msg_q)?),*)).unwrap();
+                field $func_q(&executor $(, $msg_q: $conv_q)*) -> String {
+                    let mut cmd = Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q,($(<$cmd_q>::try_from($msg_q).unwrap()),*)).unwrap();
                     match udp_passthrough(cmd,executor.context().udp()) {
                         Ok(buf) => {
                             match Command::<CommandID,$rep_q>::parse(&buf) {
-                                Ok(c) => Ok(serde_json::to_string_pretty(&<($($gql_q)*)>::from(c.data)).unwrap()),
-                                Err(CubeOSError::NoCmd) => Ok(serde_json::to_string_pretty(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()),
-                                Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
+                                Ok(c) => serde_json::to_string_pretty(&<($($gql_q)*)>::from(c.data)).unwrap().replace("\n","<br>"),
+                                Err(CubeOSError::NoCmd) => serde_json::to_string_pretty(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec()).unwrap())).unwrap(),
+                                Err(err) => serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap(),
                             }
                         }
-                        Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
+                        Err(err) => serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap(),
                     }
                 }            
             )*

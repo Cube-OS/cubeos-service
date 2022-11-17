@@ -18,14 +18,21 @@ command-id = { git = "ssh://git@github.com/Cube-OS/command-id.git"}
 rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
 
 # Freezing this at 0.14.2 for now, future update could require major changes
-juniper = { version = "0.14.2", optional = true }
-juniper_warp = {version = "0.5.2", optional = true }
+# juniper = { version = "0.14.2", optional = true }
+# juniper_warp = { version = "0.5.2", optional = true }
+# juniper = { git = "ssh://git@github.com/Cube-OS/juniper", optional = true }
+# juniper_warp = { git = "ssh://git@github.com/Cube-OS/juniper", optional = true }
+juniper = {path = "../juniper/juniper", optional = true}
+juniper_warp = {path = "../juniper/juniper_warp", optional = true}
 warp = {version = "0.1.23", optional = true }
 
 # features enable conditional compiling,
 # features cannot be combined in one compilation
 [features]
 default = []
-ground = ["dep:juniper","dep:juniper_warp","dep:warp"]
+ground = ["dep:juniper",
+    "dep:juniper_warp",
+    "dep:warp",
+]
 # all features can be combined with debug
 debug = []
