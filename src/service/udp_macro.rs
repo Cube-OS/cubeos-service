@@ -20,6 +20,7 @@
 #[macro_export]
 macro_rules! service_macro {
     (
+        use $error: ty;
         $krate: tt ::$strukt: tt {
             $(
                 $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
