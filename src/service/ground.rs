@@ -31,7 +31,7 @@ use warp::{filters::BoxedFilter, Filter};
 use cubeos_error::*;
 
 /// Type definition for a CLI tool
-pub type TerminalFn = dyn Fn(UdpPassthrough) + std::marker::Send + std::marker::Sync + 'static;
+pub type OutputFn = dyn Fn(UdpPassthrough) + std::marker::Send + std::marker::Sync + 'static;
 
 // Struct that enables passthrough of translated GraphQL inputs
 // to UDP service on satellite
@@ -142,7 +142,7 @@ pub struct Service {
     ///
     // pub filter: BoxedFilter<(warp::http::response::Response<std::vec::Vec<u8>>,)>,
     pub context: Context,
-    terminal: Option<Arc<TerminalFn>>, 
+    output: Option<Arc<OutputFn>>, 
 }
 
 impl Service {
@@ -161,7 +161,7 @@ impl Service {
         // mutation: Mutation,
         socket: String,
         target: String,
-        terminal: Option<Arc<TerminalFn>>,
+        output: Option<Arc<OutputFn>>,
     ) -> Self
     // where
     //     Query: GraphQLType<Context = Context, TypeInfo = ()> + Send + Sync + 'static,
@@ -187,7 +187,7 @@ impl Service {
         //     .unify()
         //     .boxed();
 
-        Service { config, context, terminal }
+        Service { config, context, output }
     }
 
     /// Starts the service's GraphQL/UDP server. This function runs
@@ -199,8 +199,8 @@ impl Service {
     /// cannot be bound (like if they are already in use), or if for some reason the socket fails
     /// to receive a message.
     pub fn start(self) {
-        let terminal = self.terminal.unwrap();
-        terminal(self.context.udp_pass);
+        let output = self.output.unwrap();
+        output(self.context.udp_pass);
         // let hosturl = self
         //     .config
         //     .hosturl()

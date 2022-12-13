@@ -19,19 +19,18 @@
 #[macro_export]
 macro_rules! service_macro {
     (
+        use $error: ty;
         $krate: tt ::$strukt: tt {
             $(            
                 query: $type_q: ident => fn $func_q: tt (&$(mut )?self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
             )*
             $(
-                mutation: $type_m: ident => fn $func_m: tt (&$(mut )?self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),* $(; out: $gql_m: ty)?;
+                mutation: $type_m: ident => fn $func_m: tt (&$(mut )?self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),*;
             )*
-        } $error: ident
+        }
     ) => {    
         use std::str::FromStr;
-        // use std::convert::{TryFrom,TryInto};
-        // use cubeos_error::{Error as CubeOSError, Result as CubeOSResult};
-        use cubeos_service::juniper::{FieldResult,graphql_object};
+        use failure::Fail;
         use std::net::UdpSocket;
         use cubeos_service::serde_json::to_string_pretty;
         use cubeos_service::rust_udp::Message;
@@ -40,6 +39,8 @@ macro_rules! service_macro {
         use cubeos_service::command_id::*;
         use ground::ground_handle;
         use strum::IntoEnumIterator;
+        use std::convert::{From,Into};
+        use std::io::Write;
 
         command_id!{
             // Ping,
@@ -130,69 +131,56 @@ macro_rules! service_macro {
             //     },
             // }
         // }
-        // fn handle_error(e: CubeOSError) -> String {
-        //     match e {                
-        //         ServiceError(_) => serde_json::to_string_pretty(&$error::from(e)).unwrap(),
-        //         // ServiceErrorX(u8,f64),
-        //         Failure(_) => serde_json::to_string_pretty(&failure::Error::from(e)).unwrap(),
-        //         Io(_) => serde_json::to_string_pretty(&std::io::Error::from(e)).unwrap(),
-        //         Bincode(_) => serde_json::to_string_pretty(&bincode::Error::from(e)).unwrap(),
-        //         Uart(_) => serde_json::to_string_pretty(&UartError::from(e)).unwrap(),
-        //         NixError(_) => serde_json::to_string_pretty(&nix::errno::Errno::from(e)).unwrap(),
-        //         Syslog(_) => serde_json::to_string_pretty(&syslog::Error::from(e)).unwrap(),
-        //         Diesel(_) => serde_json::to_string_pretty(&diesel::result::Error::from(e)).unwrap(),
-        //         _ => serde_json::to_string_pretty(&e).unwrap(),
-        //     }
-        // }
+
+        fn handle_error(e: CubeOSError) -> String {
+            match e {                
+                CubeOSError::ServiceError(_) => <$error>::from(e).to_string(),
+                _ => (&e).to_string(),
+            }
+        }
         
         fn handle(selection: usize, udp: &UdpPassthrough) -> String {
             match CommandID::try_from(selection as u16) {
                 Ok(id) => match id {
-                    $(CommandID::$type_q => {          
+                    $(CommandID::$type_q => {
+                        println!("{:?}:",stringify!($type_q));
                         ground_handle!($($cmd_q,)* $($msg_q,)* $type_q );                                   
                         match udp_passthrough(cmd,udp) {
                             Ok(buf) => {
-                                match Command::<CommandID,$rep_q>::parse(&buf) {
+                                match Command::<CommandID,$($gql_q)?>::parse(&buf) {
                                     Ok(c) => match serde_json::to_string_pretty(&c.data) {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
                                     },
-                                    // Err(CubeOSError::NoCmd) => serde_json::to_string_pretty(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec()).unwrap())) {
-                                    //     Ok(s) => s,
-                                    //     Err(e) => e.to_string(),
-                                    // },
-                                    Err(err) => match serde_json::to_string_pretty(&CubeOSError::from(err)) {
+                                    Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
                                     },
                                 }
                             },
-                            Err(err) => match serde_json::to_string_pretty(&CubeOSError::from(err)) {
+                            Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
                                 Ok(s) => s,
                                 Err(e) => e.to_string(),
                             },
                         }
                     },)*
                     $(CommandID::$type_m => {
+                        println!("{:?}:",stringify!($type_m));
                         ground_handle!($($cmd_m,)* $($msg_m,)* $type_m );
                         match udp_passthrough(cmd,udp) {
                             Ok(buf) => {
-                                match Command::<CommandID,$rep_m>::parse(&buf) {
+                                match Command::<CommandID,()>::parse(&buf) {
                                     Ok(c) => match serde_json::to_string_pretty(&c.data) {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
                                     },
-                                    // Err(CubeOSError::NoCmd) => serde_json::to_string_pretty(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec()).unwrap())) {
-                                    //     Ok(s) => s,
-                                    //     Err(e) => e.to_string(),
-                                    // },
-                                    Err(err) => match serde_json::to_string_pretty(&CubeOSError::from(err)) {
+                                    Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
                                     },
                                 }
                             },
-                            Err(err) => match serde_json::to_string_pretty(&CubeOSError::from(err)) {
+                            Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
                                 Ok(s) => s,
                                 Err(e) => e.to_string(),
                             },
@@ -205,6 +193,7 @@ macro_rules! service_macro {
 
         pub fn terminal(udp: UdpPassthrough) {
             loop {
+                println!("");
                 match MultiSelect::new()
                     $(.item(stringify!($type_q)))*
                     $(.item(stringify!($type_m)))*
@@ -212,8 +201,38 @@ macro_rules! service_macro {
                 {
                     Ok(Some(selection)) => {
                         for s in selection.iter() {
-                            // println!("{:?}",s);
                             println!("{}",handle(*s+1, &udp));
+                        }
+                    },
+                    _ => continue,
+                } 
+            }         
+        }
+
+        pub fn file(udp: UdpPassthrough) {
+            // Get the current process's executable path
+            let exe_path = std::env::current_exe().expect("Failed to get current executable path");
+
+            let file_path = std::path::Path::new(&format!("{}.json",exe_path.to_str().unwrap().to_owned()));
+            // Return the file name component of the executable path as a &str
+            let name = exe_path.file_name().unwrap().to_str().unwrap().to_owned() + ".json";
+
+            let mut file = if !file_path.exists() {
+                std::fs::File::create(&name).expect("Couldn't create file")
+            } else {
+                std::fs::File::open(file_path).expect("Couldn't open file")
+            };
+
+            loop {
+                println!("");
+                match MultiSelect::new()
+                    $(.item(stringify!($type_q)))*
+                    $(.item(stringify!($type_m)))*
+                    .interact_opt() 
+                {
+                    Ok(Some(selection)) => {
+                        for s in selection.iter() {
+                            file.write_all(&handle(*s+1, &udp).as_bytes()).expect("Failed to write to file");
                         }
                     },
                     _ => continue,

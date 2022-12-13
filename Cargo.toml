@@ -12,7 +12,8 @@ log = "^0.4.0"
 pkg-config = "= 0.3.15"
 
 kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
-cubeos-error = { git = "ssh://git@github.com/Cube-OS/cubeos-error.git"}
+# cubeos-error = { git = "ssh://git@github.com/Cube-OS/cubeos-error.git"}
+cubeos-error = { path = "../cubeos-error"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
 command-id = { git = "ssh://git@github.com/Cube-OS/command-id.git"}
 rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
@@ -29,6 +30,7 @@ warp = {version = "0.1.23", optional = true }
 # features cannot be combined in one compilation
 [features]
 default = []
+# ground = []
 ground = ["dep:juniper","dep:juniper_warp","dep:warp"]
 # all features can be combined with debug
 debug = []

@@ -31,9 +31,9 @@ macro_rules! service_macro {
         use crate::$krate::$strukt as Subsystem;
 
         command_id!{
-            Ping,
-            LastCmd,
-            LastErr,
+            // Ping,
+            // LastCmd,
+            // LastErr,
             $($type,)*
         }
 
@@ -71,15 +71,15 @@ macro_rules! service_macro {
 
             // Verify CommandID            
             match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
-                CommandID::Ping => {
-                    Command::<CommandID,()>::serialize(CommandID::Ping,sub.ping()?)
-                },
-                CommandID::LastCmd => {
-                    Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
-                },
-                CommandID::LastErr => {
-                    Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
-                }             
+                // CommandID::Ping => {
+                //     Command::<CommandID,()>::serialize(CommandID::Ping,sub.ping()?)
+                // },
+                // CommandID::LastCmd => {
+                //     Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
+                // },
+                // CommandID::LastErr => {
+                //     Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
+                // }             
                 $(CommandID::$type => {
                     sub.set_last_cmd(msg.to_vec());
                     // Parse Command
