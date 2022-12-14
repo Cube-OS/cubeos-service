@@ -144,7 +144,7 @@ macro_rules! service_macro {
                 Ok(id) => match id {
                     $(CommandID::$type_q => {
                         println!("{:?}:",stringify!($type_q));
-                        ground_handle!($($cmd_q,)* $($msg_q,)* $type_q );                                   
+                        ground_handle!($($conv_q,)* $($msg_q,)* $type_q );                                   
                         match udp_passthrough(cmd,udp) {
                             Ok(buf) => {
                                 match Command::<CommandID,$($gql_q)?>::parse(&buf) {
@@ -152,7 +152,7 @@ macro_rules! service_macro {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
                                     },
-                                    Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
+                                    Err(err) => match serde_json::to_string_pretty(&handle_error(bincode::deserialize::<CubeOSError>(&buf[1..]).unwrap())) {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
                                     },
@@ -166,7 +166,7 @@ macro_rules! service_macro {
                     },)*
                     $(CommandID::$type_m => {
                         println!("{:?}:",stringify!($type_m));
-                        ground_handle!($($cmd_m,)* $($msg_m,)* $type_m );
+                        ground_handle!($($conv_m,)* $($msg_m,)* $type_m );
                         match udp_passthrough(cmd,udp) {
                             Ok(buf) => {
                                 match Command::<CommandID,()>::parse(&buf) {
@@ -174,7 +174,7 @@ macro_rules! service_macro {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
                                     },
-                                    Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
+                                    Err(err) => match serde_json::to_string_pretty(&handle_error(bincode::deserialize::<CubeOSError>(&buf[1..]).unwrap())) {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
                                     },
@@ -209,36 +209,36 @@ macro_rules! service_macro {
             }         
         }
 
-        pub fn file(udp: UdpPassthrough) {
-            // Get the current process's executable path
-            let exe_path = std::env::current_exe().expect("Failed to get current executable path");
+        // pub fn file(udp: UdpPassthrough) {
+        //     // Get the current process's executable path
+        //     let exe_path = std::env::current_exe().expect("Failed to get current executable path");
 
-            let file_path = std::path::Path::new(&format!("{}.json",exe_path.to_str().unwrap().to_owned()));
-            // Return the file name component of the executable path as a &str
-            let name = exe_path.file_name().unwrap().to_str().unwrap().to_owned() + ".json";
+        //     let file_path = std::path::Path::new(&format!("{}.json",exe_path.to_str().unwrap().to_owned()));
+        //     // Return the file name component of the executable path as a &str
+        //     let name = exe_path.file_name().unwrap().to_str().unwrap().to_owned() + ".json";
 
-            let mut file = if !file_path.exists() {
-                std::fs::File::create(&name).expect("Couldn't create file")
-            } else {
-                std::fs::File::open(file_path).expect("Couldn't open file")
-            };
+        //     let mut file = if !file_path.exists() {
+        //         std::fs::File::create(&name).expect("Couldn't create file")
+        //     } else {
+        //         std::fs::File::open(file_path).expect("Couldn't open file")
+        //     };
 
-            loop {
-                println!("");
-                match MultiSelect::new()
-                    $(.item(stringify!($type_q)))*
-                    $(.item(stringify!($type_m)))*
-                    .interact_opt() 
-                {
-                    Ok(Some(selection)) => {
-                        for s in selection.iter() {
-                            file.write_all(&handle(*s+1, &udp).as_bytes()).expect("Failed to write to file");
-                        }
-                    },
-                    _ => continue,
-                } 
-            }         
-        }
+        //     loop {
+        //         println!("");
+        //         match MultiSelect::new()
+        //             $(.item(stringify!($type_q)))*
+        //             $(.item(stringify!($type_m)))*
+        //             .interact_opt() 
+        //         {
+        //             Ok(Some(selection)) => {
+        //                 for s in selection.iter() {
+        //                     file.write_all(&handle(*s+1, &udp).as_bytes()).expect("Failed to write to file");
+        //                 }
+        //             },
+        //             _ => continue,
+        //         } 
+        //     }         
+        // }
 
         #[cfg(feature = "debug")]
         pub fn debug() {
