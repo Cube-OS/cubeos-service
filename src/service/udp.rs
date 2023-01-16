@@ -38,56 +38,56 @@ pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>> + std::marker
 #[derive(Clone)]
 pub struct Context<T: Clone + std::marker::Send> {
     ///
-    pub subsystem: T,
+    pub subsystem: Arc<RwLock<T>>,
     ///
     pub storage: Arc<RwLock<HashMap<String, String>>>,
 }
 
-impl<T: Clone + std::marker::Send> Context<T> {
-    /// Returns a reference to the context's subsystem instance
-    pub fn subsystem(&self) -> &T {
-        &self.subsystem
-    }
+// impl<T: Clone + std::marker::Send> Context<T> {
+//     /// Returns a reference to the context's subsystem instance
+//     pub fn subsystem(&self) -> &T {
+//         &self.subsystem.read().unwrap()
+//     }
 
-    /// Attempts to get a value from the context's storage
-    ///
-    /// # Arguments
-    ///
-    /// `name` - Key to search for in storage
-    pub fn get(&self, name: &str) -> String {
-        let stor = self.storage.read().unwrap();
-        match stor.get(&name.to_string()) {
-            Some(s) => s.clone(),
-            None => "".to_string(),
-        }
-    }
+//     /// Attempts to get a value from the context's storage
+//     ///
+//     /// # Arguments
+//     ///
+//     /// `name` - Key to search for in storage
+//     pub fn get(&self, name: &str) -> String {
+//         let stor = self.storage.read().unwrap();
+//         match stor.get(&name.to_string()) {
+//             Some(s) => s.clone(),
+//             None => "".to_string(),
+//         }
+//     }
 
-    /// Sets a value in the context's storage
-    ///
-    /// # Arguments
-    ///
-    /// `key` - Key to store value under
-    /// `value` - Value to store
-    pub fn set(&self, key: &str, value: &str) {
-        let mut stor = self.storage.write().unwrap();
-        stor.insert(key.to_string(), value.to_string());
-    }
+//     /// Sets a value in the context's storage
+//     ///
+//     /// # Arguments
+//     ///
+//     /// `key` - Key to store value under
+//     /// `value` - Value to store
+//     pub fn set(&self, key: &str, value: &str) {
+//         let mut stor = self.storage.write().unwrap();
+//         stor.insert(key.to_string(), value.to_string());
+//     }
 
-    /// Clears a single key/value from storage
-    ///
-    /// # Arguments
-    ///
-    /// `key` - Key to clear (along with corresponding value)
-    pub fn clear(&self, name: &str) {
-        let mut storage = self.storage.write().unwrap();
-        storage.remove(name);
-    }
+//     /// Clears a single key/value from storage
+//     ///
+//     /// # Arguments
+//     ///
+//     /// `key` - Key to clear (along with corresponding value)
+//     pub fn clear(&self, name: &str) {
+//         let mut storage = self.storage.write().unwrap();
+//         storage.remove(name);
+//     }
 
-    /// Clears all key/value pairs from storage
-    pub fn clear_all(&self) {
-        self.storage.write().unwrap().clear();
-    }
-}
+//     /// Clears all key/value pairs from storage
+//     pub fn clear_all(&self) {
+//         self.storage.write().unwrap().clear();
+//     }
+// }
 
 /// This structure represents a hardware service.
 ///
@@ -116,7 +116,7 @@ pub struct Service<T:Clone + std::marker::Send + 'static>{
     udp_handler: Option<Arc<UdpFn<T, Vec<u8>>>>,  
 }
 
-impl <T: Clone + std::marker::Send + 'static> Service<T> {
+impl <T: Clone + std::marker::Send + std::marker::Sync + 'static> Service<T> {
     /// Creates a new service instance
     ///
     /// # Arguments
@@ -132,7 +132,7 @@ impl <T: Clone + std::marker::Send + 'static> Service<T> {
     //     T: Send + Sync + Clone + 'static,
     {  
         let context = Context {
-            subsystem,
+            subsystem: Arc::new(RwLock::new(subsystem)),
             storage: Arc::new(RwLock::new(HashMap::new())),
         }; 
         
@@ -177,7 +177,7 @@ impl <T: Clone + std::marker::Send + 'static> Service<T> {
 
         let socket = UdpSocket::bind(addr).expect("couldn't bind to address");
 
-        let sub = self.context.subsystem.clone();
+        // let sub = self.context.subsystem.clone();
 
         // loop for UDP handling
         // listens for UDP messages on socket
@@ -192,9 +192,9 @@ impl <T: Clone + std::marker::Send + 'static> Service<T> {
                     println!("{:?}", sock);
                     // let handler = udp_handler.lock().unwrap().clone();
                     let handler = udp_handler.clone();
-                    let mut s = sub.clone();
+                    let s = self.context.subsystem.clone();
                     thread::spawn(move || {
-                        match handler(&mut s,&mut b) {
+                        match handler(&mut s.try_write().unwrap(),&mut b) {
                             Ok(x) => {
                                 #[cfg(feature = "debug")]
                                 println!("Send: {:?} to {:?}",&x,&a);
