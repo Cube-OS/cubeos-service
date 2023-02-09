@@ -11,8 +11,8 @@ log = "^0.4.0"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
 pkg-config = "= 0.3.15"
 
-# kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
-kubos-system = { path = "../system-api"}
+kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
+# kubos-system = { path = "../system-api"}
 cubeos-error = { git = "ssh://git@github.com/Cube-OS/cubeos-error.git"}
 # cubeos-error = { path = "../cubeos-error"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
