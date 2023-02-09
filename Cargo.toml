@@ -23,7 +23,7 @@ strum = "0.24"
 strum_macros = "0.24"
 
 # Freezing this at 0.14.2 for now, future update could require major changes
-juniper = { version = "0.14.2", optional = true }
+juniper = { version = "0.15.11", optional = true }
 juniper_warp = {version = "0.5.2", optional = true }
 warp = {version = "0.1.23", optional = true }
 
