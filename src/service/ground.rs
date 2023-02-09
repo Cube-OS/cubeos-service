@@ -28,6 +28,10 @@ use std::net::{SocketAddr};
 use std::sync::{Arc, RwLock};
 use std::str::FromStr;
 use warp::{filters::BoxedFilter, Filter};
+use cubeos_error::*;
+
+/// Type definition for a CLI tool
+pub type OutputFn = dyn Fn(UdpPassthrough) + std::marker::Send + std::marker::Sync + 'static;
 
 // Struct that enables passthrough of translated GraphQL inputs
 // to UDP service on satellite
@@ -58,7 +62,7 @@ pub struct Context {
     pub udp_pass: UdpPassthrough,
 }
 
-impl JuniperContext for Context {}
+// impl JuniperContext for Context {}
 
 impl Context {
     // /// Returns a reference to the context's subsystem instance
@@ -136,7 +140,9 @@ impl Context {
 pub struct Service {
     config: Config,
     ///
-    pub filter: BoxedFilter<(warp::http::response::Response<std::vec::Vec<u8>>,)>,
+    // pub filter: BoxedFilter<(warp::http::response::Response<std::vec::Vec<u8>>,)>,
+    pub context: Context,
+    output: Option<Arc<OutputFn>>, 
 }
 
 impl Service {
@@ -149,38 +155,39 @@ impl Service {
     /// `mutation` - The root mutation struct holding all other GraphQL mutations.
     /// `socket` - UDP Socket to bind on the ground computer to enable UDP msgs
     /// `target` - Address of service running on the satellite
-    pub fn new<Query, Mutation>(
+    pub fn new(
         config: Config,
-        query: Query,
-        mutation: Mutation,
+        // query: Query,
+        // mutation: Mutation,
         socket: String,
         target: String,
+        output: Option<Arc<OutputFn>>,
     ) -> Self
-    where
-        Query: GraphQLType<Context = Context, TypeInfo = ()> + Send + Sync + 'static,
-        Mutation: GraphQLType<Context = Context, TypeInfo = ()> + Send + Sync + 'static,
+    // where
+    //     Query: GraphQLType<Context = Context, TypeInfo = ()> + Send + Sync + 'static,
+    //     Mutation: GraphQLType<Context = Context, TypeInfo = ()> + Send + Sync + 'static,
     {
-        let root_node = RootNode::new(query, mutation);
+        // let root_node = RootNode::new(query, mutation);
         let context = Context {
             storage: Arc::new(RwLock::new(HashMap::new())),
             udp_pass: UdpPassthrough::new(socket,target),
         };
 
-        // Make the subsystem and other persistent data available to all endpoints
-        let context = warp::any().map(move || context.clone()).boxed();
+        // // Make the subsystem and other persistent data available to all endpoints
+        // let context = warp::any().map(move || context.clone()).boxed();
 
-        let graphql_filter = juniper_warp::make_graphql_filter(root_node, context);
+        // let graphql_filter = juniper_warp::make_graphql_filter(root_node, context);
 
-        // If the path ends in "graphiql" process the request using the graphiql interface
-        let filter = warp::path("graphiql")
-            .and(juniper_warp::graphiql_filter("/graphql"))
-            // Otherwise, just process the request as normal GraphQL
-            .or(graphql_filter)
-            // Wrap it all up nicely so we can save the filter for later
-            .unify()
-            .boxed();
+        // // If the path ends in "graphiql" process the request using the graphiql interface
+        // let filter = warp::path("graphiql")
+        //     .and(juniper_warp::graphiql_filter("/graphql"))
+        //     // Otherwise, just process the request as normal GraphQL
+        //     .or(graphql_filter)
+        //     // Wrap it all up nicely so we can save the filter for later
+        //     .unify()
+        //     .boxed();
 
-        Service { config, filter }
+        Service { config, context, output }
     }
 
     /// Starts the service's GraphQL/UDP server. This function runs
@@ -192,23 +199,25 @@ impl Service {
     /// cannot be bound (like if they are already in use), or if for some reason the socket fails
     /// to receive a message.
     pub fn start(self) {
-        let hosturl = self
-            .config
-            .hosturl()
-            .ok_or_else(|| {
-                log::error!("Failed to load service URL");
-                "Failed to load service URL"
-            })
-            .unwrap();
-        let addr = hosturl
-            .parse::<SocketAddr>()
-            .map_err(|err| {
-                log::error!("Failed to parse SocketAddr: {:?}", err);
-                err
-            })
-            .unwrap();
-        info!("Listening on: {}", addr);
+        let output = self.output.unwrap();
+        output(self.context.udp_pass);
+        // let hosturl = self
+        //     .config
+        //     .hosturl()
+        //     .ok_or_else(|| {
+        //         log::error!("Failed to load service URL");
+        //         "Failed to load service URL"
+        //     })
+        //     .unwrap();
+        // let addr = hosturl
+        //     .parse::<SocketAddr>()
+        //     .map_err(|err| {
+        //         log::error!("Failed to parse SocketAddr: {:?}", err);
+        //         err
+        //     })
+        //     .unwrap();
+        // info!("Listening on: {}", addr);
 
-        warp::serve(self.filter).run(addr);
+        // warp::serve(self.filter).run(addr);
     }
 }

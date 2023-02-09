@@ -122,6 +122,9 @@ pub use ::rust_udp;
 pub use ::serde;
 pub use ::cubeos_error;
 pub use ::std::convert;
+pub use ::dialoguer;
+pub use ::strum;
+pub use ::strum_macros;
 
 #[cfg(feature = "ground")]
 pub use ::juniper;
