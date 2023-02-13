@@ -147,7 +147,7 @@ macro_rules! service_macro {
                         ground_handle!($($conv_q,)* $($msg_q,)* $type_q );                                   
                         match udp_passthrough(cmd,udp) {
                             Ok(buf) => {
-                                match Command::<CommandID,$($gql_q)?>::parse(&buf) {
+                                match Command::<CommandID,($($gql_q)?)>::parse(&buf) {
                                     Ok(c) => match serde_json::to_string_pretty(&c.data) {
                                         Ok(s) => s,
                                         Err(e) => e.to_string(),
