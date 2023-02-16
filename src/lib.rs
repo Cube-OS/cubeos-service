@@ -126,9 +126,6 @@ pub use ::dialoguer;
 pub use ::strum;
 pub use ::strum_macros;
 
-#[cfg(feature = "ground")]
-pub use ::juniper;
-
 mod service;
 mod command;
 mod last;

@@ -20,14 +20,12 @@
 // Contributed by: Patrick Oppel (patrick.oppel94@gmail.com)
 // 
 
-use juniper::{Context as JuniperContext, GraphQLType, RootNode};
 use kubos_system::Config;
 use log::info;
 use std::collections::HashMap;
 use std::net::{SocketAddr};
 use std::sync::{Arc, RwLock};
 use std::str::FromStr;
-use warp::{filters::BoxedFilter, Filter};
 use cubeos_error::*;
 
 /// Type definition for a CLI tool
@@ -139,8 +137,6 @@ impl Context {
 /// ```
 pub struct Service {
     config: Config,
-    ///
-    // pub filter: BoxedFilter<(warp::http::response::Response<std::vec::Vec<u8>>,)>,
     pub context: Context,
     output: Option<Arc<OutputFn>>, 
 }
@@ -157,35 +153,15 @@ impl Service {
     /// `target` - Address of service running on the satellite
     pub fn new(
         config: Config,
-        // query: Query,
-        // mutation: Mutation,
         socket: String,
         target: String,
         output: Option<Arc<OutputFn>>,
     ) -> Self
-    // where
-    //     Query: GraphQLType<Context = Context, TypeInfo = ()> + Send + Sync + 'static,
-    //     Mutation: GraphQLType<Context = Context, TypeInfo = ()> + Send + Sync + 'static,
     {
-        // let root_node = RootNode::new(query, mutation);
-        let context = Context {
+            let context = Context {
             storage: Arc::new(RwLock::new(HashMap::new())),
             udp_pass: UdpPassthrough::new(socket,target),
         };
-
-        // // Make the subsystem and other persistent data available to all endpoints
-        // let context = warp::any().map(move || context.clone()).boxed();
-
-        // let graphql_filter = juniper_warp::make_graphql_filter(root_node, context);
-
-        // // If the path ends in "graphiql" process the request using the graphiql interface
-        // let filter = warp::path("graphiql")
-        //     .and(juniper_warp::graphiql_filter("/graphql"))
-        //     // Otherwise, just process the request as normal GraphQL
-        //     .or(graphql_filter)
-        //     // Wrap it all up nicely so we can save the filter for later
-        //     .unify()
-        //     .boxed();
 
         Service { config, context, output }
     }
@@ -201,23 +177,5 @@ impl Service {
     pub fn start(self) {
         let output = self.output.unwrap();
         output(self.context.udp_pass);
-        // let hosturl = self
-        //     .config
-        //     .hosturl()
-        //     .ok_or_else(|| {
-        //         log::error!("Failed to load service URL");
-        //         "Failed to load service URL"
-        //     })
-        //     .unwrap();
-        // let addr = hosturl
-        //     .parse::<SocketAddr>()
-        //     .map_err(|err| {
-        //         log::error!("Failed to parse SocketAddr: {:?}", err);
-        //         err
-        //     })
-        //     .unwrap();
-        // info!("Listening on: {}", addr);
-
-        // warp::serve(self.filter).run(addr);
     }
 }
