@@ -22,10 +22,10 @@ macro_rules! service_macro {
         use $error: ty;
         $krate: tt ::$strukt: tt {
             $(            
-                query: $type_q: ident => fn $func_q: tt (&$(mut )?self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
+                query: $type_q: ident => fn $func_q: tt (&$(mut )?self $(, $msg_q: tt:$cmd_q: ty)*) -> $ign1_q: tt<$rep_q: ty> $(; out: $gql_q: ty)?;
             )*
             $(
-                mutation: $type_m: ident => fn $func_m: tt (&$(mut )?self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty> $(; in:)? $($conv_m: ty),*;
+                mutation: $type_m: ident => fn $func_m: tt (&$(mut )?self $(, $msg_m: tt:$cmd_m: ty)*) -> $ign1_m: tt<$rep_m: ty>;
             )*
         }
     ) => {    
@@ -80,58 +80,6 @@ macro_rules! service_macro {
             }
         }
 
-        // fn parse_last_command(msg: &mut Vec<u8>) -> String {
-            // match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]])) {
-            //     $(Ok(CommandID::$type_q) => {
-            //         match Command::<CommandID,($($cmd_q),*)>::parse(msg) {
-            //             Ok(x) => serde_json::to_string_pretty(&x).unwrap(),
-            //             Err(e) => {
-            //                 let mut s: String = serde_json::to_string_pretty(&CommandID::$type_q).unwrap();
-            //                 msg.remove(0);
-            //                 msg.remove(0);
-            //                 $(
-            //                     s.push_str("\n");
-            //                     s.push_str(std::any::type_name::<$cmd_q>());
-            //                     s.push_str(":");
-            //                     let l: Vec<u8> = msg.drain(..std::mem::size_of::<$cmd_q>()).collect();
-            //                     match bincode::deserialize::<$cmd_q>(&l) {
-            //                         Ok(st) => s.push_str(&serde_json::to_string_pretty(&st).unwrap()),
-            //                         Err(_) => s.push_str(&serde_json::to_string_pretty(&l).unwrap()),
-            //                     }
-            //                 )*
-            //                 s
-            //             }
-            //         }
-            //     },)*
-            //     $(Ok(CommandID::$type_m) => {
-            //         match Command::<CommandID,($($cmd_m),*)>::parse(msg) {
-            //             Ok(x) => serde_json::to_string_pretty(&x).unwrap(),
-            //             Err(e) => {
-            //                 let mut s: String = serde_json::to_string_pretty(&CommandID::$type_m).unwrap();
-            //                 msg.remove(0);
-            //                 msg.remove(0);
-            //                 $(
-            //                     s.push_str("\n");
-            //                     s.push_str(std::any::type_name::<$cmd_m>());
-            //                     s.push_str(":");
-            //                     let l: Vec<u8> = msg.drain(..std::mem::size_of::<$cmd_m>()).collect();                                
-            //                     match bincode::deserialize::<$cmd_m>(&l) {
-            //                         Ok(st) => s.push_str(&serde_json::to_string_pretty(&st).unwrap()),
-            //                         Err(_) => s.push_str(&serde_json::to_string_pretty(&l).unwrap()),
-            //                     }
-            //                 )*
-            //                 s
-            //             }
-            //         }
-            //     },)*
-            //     _ => {
-            //         let mut s = serde_json::to_string_pretty(&CubeOSError::NoCmd).unwrap();
-            //         s.push_str(&serde_json::to_string_pretty(&msg).unwrap());
-            //         s
-            //     },
-            // }
-        // }
-
         fn handle_error(e: CubeOSError) -> String {
             match e {                
                 CubeOSError::ServiceError(_) => <$error>::from(e).to_string(),
@@ -144,7 +92,7 @@ macro_rules! service_macro {
                 Ok(id) => match id {
                     $(CommandID::$type_q => {
                         println!("{:?}:",stringify!($type_q));
-                        ground_handle!($($conv_q,)* $($msg_q,)* $type_q );                                   
+                        ground_handle!($($cmd_q,)* $($msg_q,)* $type_q );                                   
                         match udp_passthrough(cmd,udp) {
                             Ok(buf) => {
                                 match Command::<CommandID,($($gql_q)?)>::parse(&buf) {
@@ -166,7 +114,7 @@ macro_rules! service_macro {
                     },)*
                     $(CommandID::$type_m => {
                         println!("{:?}:",stringify!($type_m));
-                        ground_handle!($($conv_m,)* $($msg_m,)* $type_m );
+                        ground_handle!($($cmd_m,)* $($msg_m,)* $type_m );
                         match udp_passthrough(cmd,udp) {
                             Ok(buf) => {
                                 match Command::<CommandID,()>::parse(&buf) {
@@ -249,84 +197,5 @@ macro_rules! service_macro {
                 cmd = cmd + 1;
             }
         }  
-
-        // // GraphQL interface run on the debug computer
-        // // Translates GraphQL Inputs into UDP msg and sends these to the satellite
-        // // Translates Serialized responses from the satellite into GraphQL
-        // pub type Context = cubeos_service::Context;
-        // pub struct QueryRoot;    
-        // graphql_object!(QueryRoot: Context as "Query" |&self| {  
-        //     field ping(&executor) -> FieldResult<String> {
-        //         let mut cmd = Command::<CommandID,()>::serialize(CommandID::Ping,()).unwrap();
-        //         match udp_passthrough(cmd,executor.context().udp()) {
-        //             Ok(buf) => {
-        //                 match Command::<CommandID,()>::parse(&buf) {
-        //                     Ok(c) => Ok(serde_json::to_string_pretty(&<()>::from(c.data)).unwrap()),
-        //                     Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()), 
-        //                 }
-        //             },
-        //             Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
-        //         }
-        //     }
-        //     field get_last_cmd(&executor) -> FieldResult<String> {
-        //         let mut cmd = Command::<CommandID,()>::serialize(CommandID::LastCmd,()).unwrap();
-        //         match udp_passthrough(cmd,executor.context().udp()) {
-        //             Ok(buf) => {
-        //                 match Command::<CommandID,Vec<u8>>::parse(&buf) {
-        //                     // Ok(c) => Ok(serde_json::to_string_pretty(&c.data).unwrap()),
-        //                     Ok(mut c) => Ok(parse_last_command(&mut c.data)),
-        //                     Err(e) => Ok(serde_json::to_string_pretty(&CubeOSError::from(e)).unwrap()),
-        //                 }
-        //             }
-        //             Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
-        //         }
-        //     }
-        //     field get_last_err(&executor) -> FieldResult<String> {
-        //         let mut cmd = Command::<CommandID,()>::serialize(CommandID::LastErr,()).unwrap();
-        //         match udp_passthrough(cmd,executor.context().udp()) {
-        //             Ok(buf) => {
-        //                 Ok(serde_json::to_string_pretty(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..]).unwrap())).unwrap())
-        //                 // match Command::<CommandID,CubeOSError>::parse(&buf) {
-        //                 //     Ok(c) => Ok(serde_json::to_string_pretty(&c.data).unwrap()),
-        //                 //     Err(e) => Ok(serde_json::to_string_pretty(&CubeOSError::from(e)).unwrap()),
-        //                 // }
-        //             }
-        //             Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
-        //         }
-        //     }
-        //     $(                 
-        //         field $func_q(&executor $(, $msg_q: $conv_q)*) -> FieldResult<String> {
-        //             let mut cmd = Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q,($(<$cmd_q>::try_from($msg_q)?),*)).unwrap();
-        //             match udp_passthrough(cmd,executor.context().udp()) {
-        //                 Ok(buf) => {
-        //                     match Command::<CommandID,$rep_q>::parse(&buf) {
-        //                         Ok(c) => Ok(serde_json::to_string_pretty(&<($($gql_q)*)>::from(c.data)).unwrap()),
-        //                         Err(CubeOSError::NoCmd) => Ok(serde_json::to_string_pretty(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()),
-        //                         Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
-        //                     }
-        //                 }
-        //                 Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
-        //             }
-        //         }            
-        //     )*
-        // });
-        // pub struct MutationRoot;  
-        // graphql_object!(MutationRoot: Context as "Mutation" |&self| {            
-        //     $(                 
-        //         field $func_m(&executor $(, $msg_m: $conv_m)*) -> FieldResult<String> {
-        //             let mut cmd = Command::<CommandID,($($cmd_m),*)>::serialize(CommandID::$type_m,($(<$cmd_m>::try_from($msg_m)?),*)).unwrap();
-        //             match udp_passthrough(cmd,executor.context().udp()) {
-        //                 Ok(buf) => {
-        //                     match Command::<CommandID,$rep_m>::parse(&buf) {
-        //                         Ok(c) => Ok(serde_json::to_string_pretty(&<($($gql_m)*)>::from(c.data)).unwrap()),
-        //                         Err(CubeOSError::NoCmd) => Ok(serde_json::to_string_pretty(&CubeOSError::from(bincode::deserialize::<CubeOSError>(&buf[2..].to_vec())?)).unwrap()),
-        //                         Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
-        //                     }
-        //                 }
-        //                 Err(err) => Ok(serde_json::to_string_pretty(&CubeOSError::from(err)).unwrap()),
-        //             }
-        //         },
-        //     )*
-        // });
     }
 }
