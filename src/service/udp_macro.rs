@@ -82,7 +82,7 @@ macro_rules! service_macro {
                 //     Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
                 // }             
                 $(CommandID::$type => {
-                    sub.set_last_cmd(msg.to_vec());
+                    // sub.set_last_cmd(msg.to_vec());
                     // Parse Command
                     let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
                     // Serialize 
@@ -96,7 +96,7 @@ macro_rules! service_macro {
                             Ok(r)
                         }
                         Err(e) => {
-                            sub.set_last_err(CubeOSError::from(e.clone()));
+                            // sub.set_last_err(CubeOSError::from(e.clone()));
                             Err(CubeOSError::from(e))
                         }
                     }
