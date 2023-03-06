@@ -20,18 +20,21 @@
 #[macro_export]
 macro_rules! service_macro {
     (
-        $(
-            $(query)?$(mutation)?: $type: ident => fn $func: tt (&self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
-        )*
+        use $error: ty;
+        $krate: tt ::$strukt: tt {
+            $(
+                $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; out: $gql_q: ty)?;
+            )*
+        }
     ) => {
-        use command_id::*;
+        use cubeos_service::command_id::*;
         use std::env::Args;
-        use crate::subsystem::*;
+        use crate::$krate::$strukt as Subsystem;
 
         command_id!{
-            Ping,
-            LastCmd,
-            LastErr,
+            // Ping,
+            // LastCmd,
+            // LastErr,
             $($type,)*
         }
 
@@ -63,18 +66,21 @@ macro_rules! service_macro {
 
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
-        pub fn udp_handler(sub: &Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
+        pub fn udp_handler(sub: &mut Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
+            #[cfg(feature = "debug")]
+            println!("Message: {:?}",msg);
+
             // Verify CommandID            
             match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
-                CommandID::Ping => {
-                    Command::<CommandID,()>::serialize(CommandID::Ping,sub.ping()?)
-                },
-                CommandID::LastCmd => {
-                    Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
-                },
-                CommandID::LastErr => {
-                    Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
-                }             
+                // CommandID::Ping => {
+                //     Command::<CommandID,()>::serialize(CommandID::Ping,sub.ping()?)
+                // },
+                // CommandID::LastCmd => {
+                //     Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
+                // },
+                // CommandID::LastErr => {
+                //     Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
+                // }             
                 $(CommandID::$type => {
                     sub.set_last_cmd(msg.to_vec());
                     // Parse Command
@@ -82,22 +88,31 @@ macro_rules! service_macro {
                     // Serialize 
                     let data = command.data;
                     match run!(Subsystem::$func; sub, data $(,$cmd)*) {
-                        Ok(x) => Ok(Command::<CommandID,$rep>::serialize(command.id,x)?),
+                        Ok(x) => {
+                            let r = Command::serialize(command.id,x)?;
+                            #[cfg(feature = "debug")]
+                            println!("Reply: {:?}",r);
+                            // Ok(Command::<CommandID,$rep>::serialize(command.id,x)?),
+                            Ok(r)
+                        }
                         Err(e) => {
                             sub.set_last_err(CubeOSError::from(e.clone()));
                             Err(CubeOSError::from(e))
                         }
                     }
-                    // match Command::<CommandID,$rep>::serialize(command.id,(run!(Subsystem::$func; sub, data $(,$cmd)*))?) {
-                    //     Ok(x) => Ok(x),
-                    //     Err(e) => {
-                    //         sub.set_last_err(CubeOSError::from(e.clone()));
-                    //         Err(CubeOSError::from(e))
-                    //     }
-                    // }
                 },)* 
             }
         }
+
+        #[cfg(feature = "debug")]
+        pub fn debug() {
+            println!("{:?}", CommandID::VARIANT_COUNT);
+            let mut cmd: usize = 0;
+            while cmd <= CommandID::VARIANT_COUNT {
+                println!("{:?}: {:?}", cmd, CommandID::try_from(cmd as u16));
+                cmd = cmd + 1;
+            }
+        }            
     };
 }
 

@@ -114,17 +114,17 @@
 //! ```
 //! 
 //! 
-pub use ::variant_count;
 pub use ::bincode;
 pub use ::serde_json;
 pub use ::command_id;
+pub use ::rust_udp;
 
 pub use ::serde;
 pub use ::cubeos_error;
 pub use ::std::convert;
-pub use ::juniper;
-
-use std::ops::AddAssign;
+pub use ::dialoguer;
+pub use ::strum;
+pub use ::strum_macros;
 
 mod service;
 mod command;
@@ -134,7 +134,6 @@ mod ping;
 pub use crate::ping::*;
 pub use crate::last::*;
 pub use crate::service::*;
-// pub use crate::command::{Generic};
 pub use crate::command::Command;
 pub use kubos_system::logger as Logger;
 pub use kubos_system::Config;

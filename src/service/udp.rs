@@ -26,64 +26,21 @@ use std::collections::HashMap;
 use std::net::{SocketAddr,UdpSocket};
 use std::sync::{Arc, RwLock};
 use cubeos_error::*;
+use rust_udp::Message;
+use std::thread;
+use std::sync::Mutex;
 
 /// Type definition for a "UDP" server pointer
-pub type UdpFn<T, Vec> = dyn Fn(&T, &mut Vec) -> Result<Vec<>>;
+pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>> + std::marker::Send + std::marker::Sync + 'static;
 
 /// Context struct used by a service to provide,
 /// subsystem access and persistent storage.
 #[derive(Clone)]
-pub struct Context<T: Clone> {
+pub struct Context<T: Clone + std::marker::Send> {
     ///
-    pub subsystem: T,
+    pub subsystem: Arc<RwLock<T>>,
     ///
     pub storage: Arc<RwLock<HashMap<String, String>>>,
-}
-
-impl<T: Clone> Context<T> {
-    /// Returns a reference to the context's subsystem instance
-    pub fn subsystem(&self) -> &T {
-        &self.subsystem
-    }
-
-    /// Attempts to get a value from the context's storage
-    ///
-    /// # Arguments
-    ///
-    /// `name` - Key to search for in storage
-    pub fn get(&self, name: &str) -> String {
-        let stor = self.storage.read().unwrap();
-        match stor.get(&name.to_string()) {
-            Some(s) => s.clone(),
-            None => "".to_string(),
-        }
-    }
-
-    /// Sets a value in the context's storage
-    ///
-    /// # Arguments
-    ///
-    /// `key` - Key to store value under
-    /// `value` - Value to store
-    pub fn set(&self, key: &str, value: &str) {
-        let mut stor = self.storage.write().unwrap();
-        stor.insert(key.to_string(), value.to_string());
-    }
-
-    /// Clears a single key/value from storage
-    ///
-    /// # Arguments
-    ///
-    /// `key` - Key to clear (along with corresponding value)
-    pub fn clear(&self, name: &str) {
-        let mut storage = self.storage.write().unwrap();
-        storage.remove(name);
-    }
-
-    /// Clears all key/value pairs from storage
-    pub fn clear_all(&self) {
-        self.storage.write().unwrap().clear();
-    }
 }
 
 /// This structure represents a hardware service.
@@ -104,7 +61,7 @@ impl<T: Clone> Context<T> {
 /// ).start();
 /// ```
 #[derive(Clone)]
-pub struct Service<T:Clone>{
+pub struct Service<T:Clone + std::marker::Send + 'static>{
 // pub struct Service<T> {
     config: Config,
     context: Context<T>,   
@@ -113,7 +70,7 @@ pub struct Service<T:Clone>{
     udp_handler: Option<Arc<UdpFn<T, Vec<u8>>>>,  
 }
 
-impl <T: Clone> Service<T> {
+impl <T: Clone + std::marker::Send + std::marker::Sync + 'static> Service<T> {
     /// Creates a new service instance
     ///
     /// # Arguments
@@ -129,7 +86,7 @@ impl <T: Clone> Service<T> {
     //     T: Send + Sync + Clone + 'static,
     {  
         let context = Context {
-            subsystem,
+            subsystem: Arc::new(RwLock::new(subsystem)),
             storage: Arc::new(RwLock::new(HashMap::new())),
         }; 
         
@@ -165,10 +122,6 @@ impl <T: Clone> Service<T> {
         let udp_handler = self.udp_handler.unwrap();
 
         let socket = UdpSocket::bind(addr).expect("couldn't bind to address");
-        
-        let mut buf = [0;250];
-
-        let sub = self.context.subsystem.clone();
 
         // loop for UDP handling
         // listens for UDP messages on socket
@@ -177,13 +130,27 @@ impl <T: Clone> Service<T> {
         #[cfg(feature = "debug")]
         println!("Start listener on: {:?}", socket);
         loop{
-            match socket.recv_from(&mut buf) {
-                Ok((b,a)) => {
-                    match udp_handler(&sub,&mut buf[..b].to_vec()){
-                        Ok(x) => socket.send_to(&x,&a).expect("couldn't send"),
-                        Err(e) => socket.send_to(&handle_err(&e),&a).expect("couldn't send"),
-                    };
-                },
+            match socket.recv_msg() {
+                Ok((mut b,a)) => {
+                    let sock = UdpSocket::bind("0.0.0.0:0").expect("couldn't bind to address");
+                    println!("{:?}", sock);
+                    // let handler = udp_handler.lock().unwrap().clone();
+                    let handler = udp_handler.clone();
+                    let s = self.context.subsystem.clone();
+                    thread::spawn(move || {
+                        match handler(&mut s.try_write().unwrap(),&mut b) {
+                            Ok(x) => {
+                                #[cfg(feature = "debug")]
+                                println!("Send: {:?} to {:?}",&x,&a);
+                                sock.send_msg(&x,&a).expect("Couldn't send")
+                            }
+                            Err(e) => {
+                                sock.send_to(&handle_err(&e),&a).expect("couldn't send");
+                            }
+                        }
+                    });
+                    continue;
+                }
                 Err(_) => continue,
             };
         }

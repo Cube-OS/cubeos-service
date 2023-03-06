@@ -16,9 +16,8 @@
 // Contributed by: Patrick Oppel (patrick.oppel94@gmail.com)
 // 
 
-use cubeos_error::{Error, Result};
+use cubeos_error::*;
 use serde::{Serialize,Deserialize};
-use std::mem::size_of;
 use std::convert::TryFrom;
 
 // Struct that enables deserializing of incoming Vec<u8> msgs
@@ -45,12 +44,12 @@ impl<'a,C: TryFrom<u16>, T: Serialize + Deserialize<'a>> Command<C,T>
 
     // parser function
     pub fn parse(msg: &'a Vec<u8>) -> Result<Self> {       
-        Ok(
-            Command{
-                id: C::try_from(u16::from_be_bytes([msg[0],msg[1]]))?,
-                data: bincode::deserialize(&msg[2..])?,
-            }
-        )
+        
+        match u16::from_be_bytes([msg[0],msg[1]]) {
+            0 => Err(Error::from(bincode::deserialize::<Error>(&msg[2..])?)),
+            65535 => Err(Error::from(bincode::deserialize::<Error>(&msg[2..])?)),
+            id => Ok(Command{id: C::try_from(id)?,data: bincode::deserialize::<T>(&msg[2..])?}),            
+        }
     }
 
     // serializer function

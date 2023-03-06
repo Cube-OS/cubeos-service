@@ -1,5 +1,5 @@
-use cubeos_error::{Error as CubeOSError, Result as CubeOSResult};
+use cubeos_error::Result;
 
 pub trait Ping {
-    fn ping(&self) -> CubeOSResult<()>;
+    fn ping(&self) -> Result<()>;
 }
