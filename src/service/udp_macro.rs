@@ -20,9 +20,10 @@
 #[macro_export]
 macro_rules! service_macro {
     (
+        use $error: ty;
         $krate: tt ::$strukt: tt {
             $(
-                $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; in:)? $($conv_q: ty),* $(; out: $gql_q: ty)?;
+                $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$ign0: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; out: $gql_q: ty)?;
             )*
         }
     ) => {
@@ -31,37 +32,37 @@ macro_rules! service_macro {
         use crate::$krate::$strukt as Subsystem;
 
         command_id!{
-            Ping,
-            LastCmd,
-            LastErr,
+            // Ping,
+            // LastCmd,
+            // LastErr,
             $($type,)*
         }
 
-        impl Last for Subsystem {
-            fn set_last_cmd(&self, input: Vec<u8>) {
-                if let Ok(mut last_cmd) = self.last_cmd.write() {
-                    *last_cmd = input;
-                }
-            }
-            fn get_last_cmd(&self) -> CubeOSResult<Vec<u8>> {
-                Ok(self.last_cmd.read().unwrap().to_vec()) 
-            }
-            fn set_last_err(&self, err: CubeOSError) {
-                println!("{:?}",err);
-                if let Ok(mut last_err) = self.last_err.write() {
-                    *last_err = err;
-                }
-            }
-            fn get_last_err(&self) -> CubeOSResult<CubeOSError> {
-                Ok(self.last_err.read().unwrap().clone())
-            }
-        }
+        //impl Last for Subsystem {
+        //    fn set_last_cmd(&self, input: Vec<u8>) {
+        //        if let Ok(mut last_cmd) = self.last_cmd.write() {
+        //            *last_cmd = input;
+        //        }
+        //    }
+        //    fn get_last_cmd(&self) -> CubeOSResult<Vec<u8>> {
+        //        Ok(self.last_cmd.read().unwrap().to_vec()) 
+        //    }
+        //   fn set_last_err(&self, err: CubeOSError) {
+        //        println!("{:?}",err);
+        //        if let Ok(mut last_err) = self.last_err.write() {
+        //            *last_err = err;
+        //        }
+        //    }
+        //    fn get_last_err(&self) -> CubeOSResult<CubeOSError> {
+        //        Ok(self.last_err.read().unwrap().clone())
+        //    }
+        //}
 
-        impl Ping for Subsystem {
-            fn ping(&self) -> CubeOSResult<()> {
-                Ok(())
-            }
-        }
+        //impl Ping for Subsystem {
+        //    fn ping(&self) -> CubeOSResult<()> {
+        //       Ok(())
+        //    }
+        //}
 
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
@@ -71,17 +72,17 @@ macro_rules! service_macro {
 
             // Verify CommandID            
             match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
-                CommandID::Ping => {
-                    Command::<CommandID,()>::serialize(CommandID::Ping,sub.ping()?)
-                },
-                CommandID::LastCmd => {
-                    Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
-                },
-                CommandID::LastErr => {
-                    Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
-                }             
+                // CommandID::Ping => {
+                //     Command::<CommandID,()>::serialize(CommandID::Ping,sub.ping()?)
+                // },
+                // CommandID::LastCmd => {
+                //     Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
+                // },
+                // CommandID::LastErr => {
+                //     Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
+                // }             
                 $(CommandID::$type => {
-                    sub.set_last_cmd(msg.to_vec());
+                    // sub.set_last_cmd(msg.to_vec());
                     // Parse Command
                     let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
                     // Serialize 
@@ -95,7 +96,7 @@ macro_rules! service_macro {
                             Ok(r)
                         }
                         Err(e) => {
-                            sub.set_last_err(CubeOSError::from(e.clone()));
+                            // sub.set_last_err(CubeOSError::from(e.clone()));
                             Err(CubeOSError::from(e))
                         }
                     }
