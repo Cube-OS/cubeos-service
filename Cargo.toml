@@ -19,6 +19,7 @@ rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
 dialoguer = "0.10.2"
 strum = "0.24"
 strum_macros = "0.24"
+lazy_static = "1.4.0"
 
 # features enable conditional compiling,
 # features cannot be combined in one compilation

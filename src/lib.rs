@@ -125,7 +125,9 @@ pub use ::std::convert;
 pub use ::dialoguer;
 pub use ::strum;
 pub use ::strum_macros;
+pub use ::lazy_static::lazy_static;
 
+mod app;
 mod service;
 mod command;
 mod last;
