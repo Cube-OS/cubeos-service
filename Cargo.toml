@@ -1,6 +1,6 @@
 [package]
 name = "cubeos-service"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Patrick Oppel <patrick.oppel94@gmail.com>"]
 edition = "2018"
 
@@ -12,19 +12,21 @@ log = "^0.4.0"
 pkg-config = "= 0.3.15"
 
 kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
-cubeos-error = { git = "ssh://git@github.com/Cube-OS/cubeos-error.git"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
 command-id = { git = "ssh://git@github.com/Cube-OS/command-id.git"}
 rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
-dialoguer = "0.10.2"
-strum = "0.24"
-strum_macros = "0.24"
-lazy_static = "1.4.0"
+
+dialoguer = {version = "0.10.2", optional = true}
+strum = {version = "0.24", optional = true}
+strum_macros = {version = "0.24", optional = true}
+lazy_static = {version = "1.4.0", optional = true}
+ground = { git = "ssh://git@github.com/Cube-OS/ground", optional = true}
 
 # features enable conditional compiling,
 # features cannot be combined in one compilation
 [features]
 default = []
-ground = []
+ground = ["dep:ground","dep:strum","dep:strum_macros","dep:dialoguer"]
+app = ["dep:lazy_static"]
 # all features can be combined with debug
 debug = []

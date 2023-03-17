@@ -23,18 +23,17 @@
 // #![deny(missing_docs)]
 // #![deny(warnings)]
 
-//! A collection of structures and functions used to create hardware services
+//! A collection of structures and functions used to create hardware apis, services and apps
 //! in the Cube-OS Linux ecosystem.
 //!
 //! # Use
 //!
-//! The basic use of the cube-os_service crate is through the Service structure.
+//! The basic use of the cubeos_service crate is through the Service structure.
 //! This structure provides an interface for creating a new service instance. 
 //! The service instance is chosen with the --features flag at build. 
-//! The default service enables the UDP handling. The debug feature is to be used
-//! on the ground computer connected to the satellite, to run GraphQL. The graphql
-//! feature enables the old kubos-service use. The user has the choice of building
-//! their service old-school or with the convenience of the service_macro (see below).
+//! The default service enables the UDP handling of the service on the satellite.
+//! The ground feature creates a CLI to communicate with the satellite from a ground-station.
+//! The app feature is used by Apps to enable UDP communication between the App and a service.
 //! 
 //! The service instance also provides a starting entry point and basic configuration
 //! file parsing.
@@ -118,21 +117,32 @@ pub use ::bincode;
 pub use ::serde_json;
 pub use ::command_id;
 pub use ::rust_udp;
-
 pub use ::serde;
-pub use ::cubeos_error;
 pub use ::std::convert;
+
+#[cfg(feature = "ground")]
 pub use ::dialoguer;
+#[cfg(feature = "ground")]
+pub use ::ground;
+#[cfg(feature = "ground")]
 pub use ::strum;
+#[cfg(feature = "ground")]
 pub use ::strum_macros;
+
+#[cfg(feature = "app")]
 pub use ::lazy_static::lazy_static;
 
+#[cfg(feature = "app")]
 mod app;
+#[cfg(not(feature = "app"))]
 mod service;
+
 mod command;
 mod last;
 mod ping;
+mod error;
 
+pub use crate::error::*;
 pub use crate::ping::*;
 pub use crate::last::*;
 pub use crate::service::*;
