@@ -25,7 +25,7 @@ use log::info;
 use std::collections::HashMap;
 use std::net::{SocketAddr,UdpSocket};
 use std::sync::{Arc, RwLock};
-use cubeos_error::*;
+use crate::error::*;
 use rust_udp::Message;
 use std::thread;
 use std::sync::Mutex;

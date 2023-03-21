@@ -26,7 +26,7 @@ use std::collections::HashMap;
 use std::net::{SocketAddr};
 use std::sync::{Arc, RwLock};
 use std::str::FromStr;
-use cubeos_error::*;
+use crate::error::*;
 
 /// Type definition for a CLI tool
 pub type OutputFn = dyn Fn(UdpPassthrough) + std::marker::Send + std::marker::Sync + 'static;

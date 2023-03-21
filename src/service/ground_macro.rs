@@ -36,7 +36,7 @@ macro_rules! service_macro {
         use cubeos_service::rust_udp::Message;
         use cubeos_service::bincode;
         use cubeos_service::dialoguer::{MultiSelect,Select};
-        use cubeos_service::command_id::*;
+        use cubeos_service::command_id;
         use ground::ground_handle;
         use strum::IntoEnumIterator;
         use std::convert::{From,Into};

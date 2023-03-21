@@ -115,10 +115,10 @@
 //! 
 pub use ::bincode;
 pub use ::serde_json;
-pub use ::command_id;
 pub use ::rust_udp;
 pub use ::serde;
 pub use ::std::convert;
+pub use ::variant_count;
 
 #[cfg(feature = "ground")]
 pub use ::dialoguer;
@@ -142,9 +142,10 @@ mod last;
 mod ping;
 mod error;
 
-pub use crate::error::*;
+pub use crate::error::{Error,Result};
 pub use crate::ping::*;
 pub use crate::last::*;
+#[cfg(not(feature = "api"))]
 pub use crate::service::*;
 pub use crate::command::Command;
 pub use kubos_system::logger as Logger;

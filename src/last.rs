@@ -1,4 +1,4 @@
-use cubeos_error::{Error, Result};
+use crate::error::{Error, Result};
 
 pub trait Last {
     fn set_last_cmd(&self, input: Vec<u8>);

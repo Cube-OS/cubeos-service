@@ -27,7 +27,7 @@ macro_rules! service_macro {
             )*
         }
     ) => {
-        use cubeos_service::command_id::*;
+        use cubeos_service::command_id;
         use std::env::Args;
         use crate::$krate::$strukt as Subsystem;
 

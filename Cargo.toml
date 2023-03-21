@@ -8,13 +8,26 @@ edition = "2018"
 serde = {version = "1.0", features = ["derive"]}
 serde_json = "1.0"
 log = "^0.4.0"
+variant_count = "1.1"
+
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
 pkg-config = "= 0.3.15"
 
-kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
+# kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
+kubos-system = { path = "../system-api"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
-command-id = { git = "ssh://git@github.com/Cube-OS/command-id.git"}
 rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
+failure = "0.1.8"
+
+serial = {version = "0.4.0"}
+rust-uart = { git = "ssh://git@github.com/Cube-OS/rust-uart"}
+# APP activate for nix only
+nix = { version = "0.24.1", optional = true}
+# Syslog
+syslog = { version = "^6.0.1"} 
+# Database only activate for Database for now
+cubeos-telemetry-db = { git = "ssh://git@github.com/Cube-OS/telemetry-db-api", optional = true}
+diesel = { version = "1.0.0", features = ["sqlite"], optional = true}
 
 dialoguer = {version = "0.10.2", optional = true}
 strum = {version = "0.24", optional = true}
@@ -28,5 +41,7 @@ ground = { git = "ssh://git@github.com/Cube-OS/ground", optional = true}
 default = []
 ground = ["dep:ground","dep:strum","dep:strum_macros","dep:dialoguer"]
 app = ["dep:lazy_static"]
+nix = ["dep:nix"]
+diesel = ["dep:diesel","dep:cubeos-telemetry-db"]
 # all features can be combined with debug
 debug = []

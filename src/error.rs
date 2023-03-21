@@ -21,8 +21,9 @@ use failure::{Fail};
 use serde::{Serialize,Deserialize};
 use std::convert::Infallible;
 use std::sync::{PoisonError,MutexGuard,RwLockReadGuard};
-use nix::errno::Errno;
 use syslog::Error as SyslogError;
+#[cfg(feature = "nix")]
+use nix::errno::Errno;
 
 /// Common Error for UDP Command Handling
 #[derive(Serialize, Deserialize, Debug, Fail, Clone, PartialEq)]
@@ -201,27 +202,28 @@ impl From<bincode::Error> for Error {
         }
     }
 }
-impl From<Error> for bincode::Error {
-    fn from(e: Error) -> bincode::Error {
-        match e {
-            Error::Bincode(0) => bincode::ErrorKind::Io(std::io::Error::new(std::io::ErrorKind::Other, "")).into(),
-            Error::Bincode(1) => bincode::ErrorKind::InvalidUtf8Encoding(vec![]).into(),
-            Error::Bincode(2) => bincode::ErrorKind::InvalidBoolEncoding(vec![]).into(),
-            Error::Bincode(3) => bincode::ErrorKind::InvalidCharEncoding.into(),
-            Error::Bincode(4) => bincode::ErrorKind::InvalidTagEncoding(vec![]).into(),
-            Error::Bincode(5) => bincode::ErrorKind::DeserializeAnyNotSupported.into(),
-            Error::Bincode(6) => bincode::ErrorKind::SizeLimit.into(),
-            Error::Bincode(7) => bincode::ErrorKind::SequenceMustHaveLength.into(),
-            Error::Bincode(8) => bincode::ErrorKind::Custom("".to_string()).into(),
-            _ => bincode::ErrorKind::Custom("".to_string()).into(),
-        }
-    }
-}
+// impl From<Error> for bincode::Error {
+//     fn from(e: Error) -> bincode::Error {
+//         match e {
+//             Error::Bincode(0) => bincode::ErrorKind::Io(std::io::Error::new(std::io::ErrorKind::Other, "")).into(),
+//             Error::Bincode(1) => bincode::ErrorKind::InvalidUtf8Encoding(vec![]).into(),
+//             Error::Bincode(2) => bincode::ErrorKind::InvalidBoolEncoding(vec![]).into(),
+//             Error::Bincode(3) => bincode::ErrorKind::InvalidCharEncoding.into(),
+//             Error::Bincode(4) => bincode::ErrorKind::InvalidTagEncoding(vec![]).into(),
+//             Error::Bincode(5) => bincode::ErrorKind::DeserializeAnyNotSupported.into(),
+//             Error::Bincode(6) => bincode::ErrorKind::SizeLimit.into(),
+//             Error::Bincode(7) => bincode::ErrorKind::SequenceMustHaveLength.into(),
+//             Error::Bincode(8) => bincode::ErrorKind::Custom("".to_string()).into(),
+//             _ => bincode::ErrorKind::Custom("".to_string()).into(),
+//         }
+//     }
+// }
 impl From<PoisonError<MutexGuard<'_,()>>> for Error {
     fn from(_e: PoisonError<MutexGuard<'_,()>>) -> Error {
         Error::PoisonedMutex
     }
 }
+#[cfg(feature = "diesel")]
 impl From<PoisonError<MutexGuard<'_,cubeos_telemetry_db::Database>>> for Error {
     fn from(_e: PoisonError<MutexGuard<'_,cubeos_telemetry_db::Database>>) -> Error {
         Error::PoisonedMutex
@@ -248,30 +250,31 @@ impl From<rust_uart::UartError> for Error {
         }
     }
 }
-impl From<Error> for rust_uart::UartError {
-    fn from(e: Error) -> rust_uart::UartError {
-        match e {
-            Error::Uart(0) => rust_uart::UartError::GenericError,
-            Error::Uart(1) => rust_uart::UartError::PortBusy,
-            Error::Uart(2) => rust_uart::UartError::SerialError(serial::Error::new(
-                serial::ErrorKind::NoDevice,
-                "No device",
-            )),
-            Error::Uart(3) => rust_uart::UartError::SerialError(serial::Error::new(
-                serial::ErrorKind::InvalidInput,
-                "Invalid input",
-            )),
-            Error::Uart(4) => rust_uart::UartError::SerialError(serial::Error::new(
-                serial::ErrorKind::Unknown,
-                "Unknown",
-            )),
-            Error::Io(io) => rust_uart::UartError::SerialError(std::io::Error::from(io)
-            ),            
-            _ => rust_uart::UartError::GenericError,
-        }
-    }
-}
+// impl From<Error> for rust_uart::UartError {
+//     fn from(e: Error) -> rust_uart::UartError {
+//         match e {
+//             Error::Uart(0) => rust_uart::UartError::GenericError,
+//             Error::Uart(1) => rust_uart::UartError::PortBusy,
+//             Error::Uart(2) => rust_uart::UartError::SerialError(serial::Error::new(
+//                 serial::ErrorKind::NoDevice,
+//                 "No device",
+//             )),
+//             Error::Uart(3) => rust_uart::UartError::SerialError(serial::Error::new(
+//                 serial::ErrorKind::InvalidInput,
+//                 "Invalid input",
+//             )),
+//             Error::Uart(4) => rust_uart::UartError::SerialError(serial::Error::new(
+//                 serial::ErrorKind::Unknown,
+//                 "Unknown",
+//             )),
+//             Error::Io(io) => rust_uart::UartError::SerialError(std::io::Error::from(io)
+//             ),            
+//             _ => rust_uart::UartError::GenericError,
+//         }
+//     }
+// }
 
+#[cfg(feature = "nix")]
 impl From<Errno> for Error {
     fn from(e: Errno) -> Error {
         match e {            
@@ -411,6 +414,7 @@ impl From<Errno> for Error {
         }
     }
 }
+#[cfg(feature = "nix")]
 impl From<Error> for Errno {
     fn from(e: Error) -> Errno {
         match e {            
@@ -563,21 +567,21 @@ impl From<SyslogError> for Error {
         }
     }
 }
-impl From<Error> for SyslogError {
-    fn from(e: Error) -> SyslogError {
-        match e {
-            Error::Io(i) => SyslogError::from(i),
-            Error::Syslog(0) => SyslogError::new(syslog::ErrorKind::Msg(""), ""),
-            Error::Syslog(1) => SyslogError::new(syslog::ErrorKind::Initialization, ""),
-            Error::Syslog(2) => SyslogError::new(syslog::ErrorKind::UnsupportedPlatform, ""),
-            Error::Syslog(3) => SyslogError::new(syslog::ErrorKind::Format, ""),
-            Error::Syslog(4) => SyslogError::new(syslog::ErrorKind::Write, ""),
-            Error::Syslog(5) => SyslogError::new(syslog::ErrorKind::Msg(""), ""),
-            _ => SyslogError::new(syslog::ErrorKind::Msg(""), ""),
-        }
-    }
-}
-
+// impl From<Error> for SyslogError {
+//     fn from(e: Error) -> SyslogError {
+//         match e {
+//             Error::Io(i) => SyslogError::from(i),
+//             Error::Syslog(0) => SyslogError::new(syslog::ErrorKind::Msg(""), ""),
+//             Error::Syslog(1) => SyslogError::new(syslog::ErrorKind::Initialization, ""),
+//             Error::Syslog(2) => SyslogError::new(syslog::ErrorKind::UnsupportedPlatform, ""),
+//             Error::Syslog(3) => SyslogError::new(syslog::ErrorKind::Format, ""),
+//             Error::Syslog(4) => SyslogError::new(syslog::ErrorKind::Write, ""),
+//             Error::Syslog(5) => SyslogError::new(syslog::ErrorKind::Msg(""), ""),
+//             _ => SyslogError::new(syslog::ErrorKind::Msg(""), ""),
+//         }
+//     }
+// }
+#[cfg(feature = "diesel")]
 impl From<diesel::result::Error> for Error {
     fn from(e: diesel::result::Error) -> Error {
         match e {
@@ -593,6 +597,7 @@ impl From<diesel::result::Error> for Error {
         }
     }
 }
+#[cfg(feature = "diesel")]
 impl From<Error> for diesel::result::Error {
     fn from(e: Error) -> diesel::result::Error {
         match e {

@@ -8,7 +8,7 @@ macro_rules! app_macro{
         }
     ) => {
         use crate::rust_udp::Connection;
-        use cubeos_service::command_id::*;
+        use cubeos_service::command_id;
 
         command_id!{
             $($type,)*
