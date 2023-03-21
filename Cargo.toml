@@ -13,8 +13,7 @@ variant_count = "1.1"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
 pkg-config = "= 0.3.15"
 
-# kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
-kubos-system = { path = "../system-api"}
+kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
 rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
 failure = "0.1.8"
