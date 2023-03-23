@@ -145,9 +145,9 @@ mod error;
 pub use crate::error::{Error,Result};
 pub use crate::ping::*;
 pub use crate::last::*;
-#[cfg(not(feature = "api"))]
+#[cfg(not(any(feature = "api", feature = "app"))]
 pub use crate::service::*;
-#[cfg(not(feature = "api"))]
+#[cfg(feature = "app")]
 pub use crate::app::*;
 pub use crate::command::Command;
 pub use kubos_system::logger as Logger;
