@@ -147,6 +147,8 @@ pub use crate::ping::*;
 pub use crate::last::*;
 #[cfg(not(feature = "api"))]
 pub use crate::service::*;
+#[cfg(not(feature = "api"))]
+pub use crate::app::*;
 pub use crate::command::Command;
 pub use kubos_system::logger as Logger;
 pub use kubos_system::Config;
