@@ -145,7 +145,7 @@ mod error;
 pub use crate::error::{Error,Result};
 pub use crate::ping::*;
 pub use crate::last::*;
-#[cfg(not(any(feature = "api", feature = "app")))]
+#[cfg(feature = "default")]
 pub use crate::service::*;
 #[cfg(feature = "app")]
 pub use crate::app::*;
