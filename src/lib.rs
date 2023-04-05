@@ -134,7 +134,7 @@ pub use ::lazy_static::lazy_static;
 
 #[cfg(feature = "app")]
 mod app;
-#[cfg(not(feature = "app"))]
+#[cfg(feature = "default"))]
 mod service;
 
 mod command;
