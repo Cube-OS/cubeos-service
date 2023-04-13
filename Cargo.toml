@@ -19,7 +19,7 @@ rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
 failure = "0.1.8"
 
 serial = {version = "0.4.0"}
-rust-uart = { git = "ssh://git@github.com/Cube-OS/rust-uart"}
+uart-rs = { git = "ssh://git@github.com/Cube-OS/uart-rs"}
 # APP activate for nix only
 nix = { version = "0.24.1", optional = true}
 # Syslog
