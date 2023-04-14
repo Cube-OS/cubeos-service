@@ -15,7 +15,7 @@ pkg-config = "= 0.3.15"
 
 kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
-rust-udp = { git = "ssh://git@github.com/Cube-OS/rust-udp"}
+udp-rs = { git = "ssh://git@github.com/Cube-OS/udp-rs"}
 failure = "0.1.8"
 
 serial = {version = "0.4.0"}
