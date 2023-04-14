@@ -7,7 +7,7 @@ macro_rules! app_macro{
             )*
         }
     ) => {
-        use cubeos_service::rust_udp::Connection;
+        use cubeos_service::udp_rs::Connection;
         use cubeos_service::command_id;
 
         command_id!{
