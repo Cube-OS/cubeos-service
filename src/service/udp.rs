@@ -26,7 +26,7 @@ use std::collections::HashMap;
 use std::net::{SocketAddr,UdpSocket};
 use std::sync::{Arc, RwLock};
 use crate::error::*;
-use rust_udp::Message;
+use udp_rs::Message;
 use std::thread;
 use std::sync::Mutex;
 
