@@ -33,7 +33,7 @@ macro_rules! service_macro {
         use failure::Fail;
         use std::net::UdpSocket;
         use cubeos_service::serde_json::to_string_pretty;
-        use cubeos_service::rust_udp::Message;
+        use cubeos_service::udp_rs::Message;
         use cubeos_service::bincode;
         use cubeos_service::dialoguer::{MultiSelect,Select};
         use cubeos_service::command_id;
