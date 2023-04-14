@@ -115,7 +115,7 @@
 //! 
 pub use ::bincode;
 pub use ::serde_json;
-pub use ::rust_udp;
+pub use ::udp_rs;
 pub use ::serde;
 pub use ::std::convert;
 pub use ::variant_count;
