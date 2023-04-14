@@ -234,12 +234,12 @@ impl From<PoisonError<RwLockReadGuard<'_,()>>> for Error {
         Error::PoisonedRwLock
     }
 }
-impl From<rust_uart::UartError> for Error {
-    fn from(e: rust_uart::UartError) -> Error {
+impl From<uart_rs::UartError> for Error {
+    fn from(e: uart_rs::UartError) -> Error {
         match e {
-            rust_uart::UartError::GenericError => Error::Uart(0),
-            rust_uart::UartError::PortBusy => Error::Uart(1),
-            rust_uart::UartError::SerialError(s) => {
+            uart_rs::UartError::GenericError => Error::Uart(0),
+            uart_rs::UartError::PortBusy => Error::Uart(1),
+            uart_rs::UartError::SerialError(s) => {
                 match s {
                     serial::ErrorKind::NoDevice => Error::Uart(2),
                     serial::ErrorKind::InvalidInput => Error::Uart(3),
