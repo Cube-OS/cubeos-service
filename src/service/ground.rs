@@ -184,15 +184,17 @@ impl Service {
         // listens for JSON messages on socket
         // uses json_handler function supplied by service to handle the cmd
         // returns answer to sender
-        #[cfg(feature = "debug")]
+        // #[cfg(feature = "debug")]
         println!("Start listener on: {:?}", socket);
+        let mut buf = [0; 1024];
         loop{
-            match socket.recv_msg() {                
-                Ok((mut msg,a)) => {   
-                    #[cfg(feature = "debug")]
+            match socket.recv_from(&mut buf) {                
+                Ok((b,a)) => {   
+                    // #[cfg(feature = "debug")]
+                    let msg = String::from_utf8(buf[..b].to_vec()).unwrap();
                     println!("Received message: {:?} from {:?}", msg, a);  
                     let sock = UdpSocket::bind("0.0.0.0:0").expect("couldn't bind to address");                
-                    let msg = String::from_utf8(msg).unwrap();                   
+                    // let msg = String::from_utf8(msg).unwrap();                   
                     let handler = self.json_handler.as_ref().unwrap().clone();
                     let target = target.clone();
                     thread::spawn(move || {

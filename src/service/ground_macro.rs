@@ -58,8 +58,11 @@ macro_rules! service_macro {
             $($type_m,)*
         }
 
-        $(print_json!($type_q,$($msg_q,$cmd_q),*);)*
-        $(print_json!($type_m,$($msg_m,$cmd_m),*);)*
+        print_json!(
+            $($type_q$(, $msg_q, $cmd_q),*;)*
+            $($type_m$(, $msg_m, $cmd_m),*;)*
+        );
+        // $(print_json!($type_m,$($msg_m,$cmd_m),*);)*
 
         $(#[derive(Serialize,Deserialize,Debug)]
         pub struct $type_q {
@@ -184,6 +187,7 @@ macro_rules! service_macro {
             match serde_json::from_str::<Commands>(&json) {
                 $(Ok(Commands::$type_q(q)) => {
                     let comand: Command<CommandID,($($cmd_q),*)>= q.into();
+                    println!("{:?}",comand);
                     let cmd = match comand.ser() {
                         Ok(cmd) => cmd,
                         Err(e) => return serde_json::to_string_pretty(&e).unwrap(),
@@ -209,6 +213,7 @@ macro_rules! service_macro {
                 }),*
                 $(Ok(Commands::$type_m(m)) => {
                     let comand: Command<CommandID,($($cmd_m),*)>= m.into();
+                    println!("{:?}",comand);
                     let cmd = match comand.ser() {
                         Ok(cmd) => cmd,
                         Err(e) => return serde_json::to_string_pretty(&e).unwrap(),
@@ -232,7 +237,10 @@ macro_rules! service_macro {
                         },
                     }
                 }),*
-                Err(e) => "Command ID not found".to_string(),
+                Err(e) => {
+                    println!("{:?}",e);
+                    "Command ID not found".to_string()
+                }
             }
             // match serde_json::from_str::<Command::<CommandID,serde_json::Value>>(&json) {
             //     Ok(cmd) => match cmd.id {
