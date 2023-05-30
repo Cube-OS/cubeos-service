@@ -187,6 +187,7 @@ macro_rules! service_macro {
             match serde_json::from_str::<Commands>(&json) {
                 $(Ok(Commands::$type_q(q)) => {
                     let comand: Command<CommandID,($($cmd_q),*)>= q.into();
+                    #[cfg(feature = "debug")]
                     println!("{:?}",comand);
                     let cmd = match comand.ser() {
                         Ok(cmd) => cmd,
@@ -213,6 +214,7 @@ macro_rules! service_macro {
                 }),*
                 $(Ok(Commands::$type_m(m)) => {
                     let comand: Command<CommandID,($($cmd_m),*)>= m.into();
+                    #[cfg(feature = "debug")]
                     println!("{:?}",comand);
                     let cmd = match comand.ser() {
                         Ok(cmd) => cmd,
@@ -238,171 +240,12 @@ macro_rules! service_macro {
                     }
                 }),*
                 Err(e) => {
+                    #[cfg(feature = "debug")]
                     println!("{:?}",e);
                     "Command ID not found".to_string()
                 }
             }
-            // match serde_json::from_str::<Command::<CommandID,serde_json::Value>>(&json) {
-            //     Ok(cmd) => match cmd.id {
-            //         $(CommandID::$type_q => {
-            //             let cmd = match serde_json::from_str::<Command<CommandID,($($cmd_q),*)>>(&json) {
-            //                 Ok(cmd) => cmd,
-            //                 Err(e) => return "failed to parse command".to_string(),
-            //             };
-            //             let cmd = match Command::<CommandID, ($($cmd_q),*)>::serialize(cmd.id,cmd.data) {
-            //                 Ok(cmd) => cmd,
-            //                 Err(e) => return serde_json::to_string_pretty(&e).unwrap(),
-            //             };
-            //             match udp_passthrough(cmd,target) {
-            //                 Ok(buf) => {
-            //                     match Command::<CommandID,($($gql_q)?)>::parse(&buf) {
-            //                         Ok(c) => match serde_json::to_string_pretty(&c.data) {
-            //                             Ok(s) => s,
-            //                             Err(e) => e.to_string(),
-            //                         },
-            //                         Err(err) => match serde_json::to_string_pretty(&handle_error(bincode::deserialize::<CubeOSError>(&buf[1..]).unwrap())) {
-            //                             Ok(s) => s,
-            //                             Err(e) => e.to_string(),
-            //                         },
-            //                     }
-            //                 },
-            //                 Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
-            //                     Ok(s) => s,
-            //                     Err(e) => e.to_string(),
-            //                 },
-            //             }
-            //         }),*
-            //         $(CommandID::$type_m => {  
-            //             let cmd = match serde_json::from_str::<Command<CommandID,($($cmd_m),*)>>(&json) {
-            //                 Ok(cmd) => cmd,
-            //                 Err(e) => return "failed to parse command".to_string(),
-            //             };
-            //             let cmd = match Command::<CommandID, ($($cmd_m),*)>::serialize(cmd.id,cmd.data) {
-            //                 Ok(cmd) => cmd,
-            //                 Err(e) => return serde_json::to_string_pretty(&e).unwrap(),
-            //             };                      
-            //             match udp_passthrough(cmd,target) {
-            //                 Ok(buf) => {
-            //                     match Command::<CommandID,()>::parse(&buf) {
-            //                         Ok(c) => match serde_json::to_string_pretty(&c.data) {
-            //                             Ok(s) => s,
-            //                             Err(e) => e.to_string(),
-            //                         },
-            //                         Err(err) => match serde_json::to_string_pretty(&handle_error(bincode::deserialize::<CubeOSError>(&buf[1..]).unwrap())) {
-            //                             Ok(s) => s,
-            //                             Err(e) => e.to_string(),
-            //                         },
-            //                     }
-            //                 },
-            //                 Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
-            //                     Ok(s) => s,
-            //                     Err(e) => e.to_string(),
-            //                 },
-            //             }
-            //         },)*
-            //     },
-            //     Err(_) => "Command ID not found".to_string(),                
-            // }            
-        }
-            // match CommandID::try_from(selection as u16) {
-            //     Ok(id) => match id {
-            //         $(CommandID::$type_q => {
-            //             println!("{:?}:",stringify!($type_q));
-            //             ground_handle!($($cmd_q,)* $($msg_q,)* $type_q );                                   
-            //             match udp_passthrough(cmd,udp) {
-            //                 Ok(buf) => {
-            //                     match Command::<CommandID,($($gql_q)?)>::parse(&buf) {
-            //                         Ok(c) => match serde_json::to_string_pretty(&c.data) {
-            //                             Ok(s) => s,
-            //                             Err(e) => e.to_string(),
-            //                         },
-            //                         Err(err) => match serde_json::to_string_pretty(&handle_error(bincode::deserialize::<CubeOSError>(&buf[1..]).unwrap())) {
-            //                             Ok(s) => s,
-            //                             Err(e) => e.to_string(),
-            //                         },
-            //                     }
-            //                 },
-            //                 Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
-            //                     Ok(s) => s,
-            //                     Err(e) => e.to_string(),
-            //                 },
-            //             }
-            //         },)*
-            //         $(CommandID::$type_m => {
-            //             println!("{:?}:",stringify!($type_m));
-            //             ground_handle!($($cmd_m,)* $($msg_m,)* $type_m );
-            //             match udp_passthrough(cmd,udp) {
-            //                 Ok(buf) => {
-            //                     match Command::<CommandID,()>::parse(&buf) {
-            //                         Ok(c) => match serde_json::to_string_pretty(&c.data) {
-            //                             Ok(s) => s,
-            //                             Err(e) => e.to_string(),
-            //                         },
-            //                         Err(err) => match serde_json::to_string_pretty(&handle_error(bincode::deserialize::<CubeOSError>(&buf[1..]).unwrap())) {
-            //                             Ok(s) => s,
-            //                             Err(e) => e.to_string(),
-            //                         },
-            //                     }
-            //                 },
-            //                 Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
-            //                     Ok(s) => s,
-            //                     Err(e) => e.to_string(),
-            //                 },
-            //             }
-            //         },)*
-            //     },
-            //     Err(_) => "Command ID not found".to_string(),
-            // }
-        // }
-
-        // pub fn terminal(udp: UdpPassthrough) {
-        //     loop {
-        //         println!("");
-        //         match MultiSelect::new()
-        //             $(.item(stringify!($type_q)))*
-        //             $(.item(stringify!($type_m)))*
-        //             .interact_opt() 
-        //         {
-        //             Ok(Some(selection)) => {
-        //                 for s in selection.iter() {
-        //                     println!("{}",handle(*s+1, &udp));
-        //                 }
-        //             },
-        //             _ => continue,
-        //         } 
-        //     }         
-        // }
-
-        // pub fn file(udp: UdpPassthrough) {
-        //     // Get the current process's executable path
-        //     let exe_path = std::env::current_exe().expect("Failed to get current executable path");
-
-        //     let file_path = std::path::Path::new(&format!("{}.json",exe_path.to_str().unwrap().to_owned()));
-        //     // Return the file name component of the executable path as a &str
-        //     let name = exe_path.file_name().unwrap().to_str().unwrap().to_owned() + ".json";
-
-        //     let mut file = if !file_path.exists() {
-        //         std::fs::File::create(&name).expect("Couldn't create file")
-        //     } else {
-        //         std::fs::File::open(file_path).expect("Couldn't open file")
-        //     };
-
-        //     loop {
-        //         println!("");
-        //         match MultiSelect::new()
-        //             $(.item(stringify!($type_q)))*
-        //             $(.item(stringify!($type_m)))*
-        //             .interact_opt() 
-        //         {
-        //             Ok(Some(selection)) => {
-        //                 for s in selection.iter() {
-        //                     file.write_all(&handle(*s+1, &udp).as_bytes()).expect("Failed to write to file");
-        //                 }
-        //             },
-        //             _ => continue,
-        //         } 
-        //     }         
-        // }
+        }           
 
         #[cfg(feature = "debug")]
         pub fn debug() {
