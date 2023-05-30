@@ -199,6 +199,8 @@ impl Service {
                     let target = target.clone();
                     thread::spawn(move || {
                         let reply = handler(msg,target);
+                        #[cfg(feature = "debug")]
+                        println!("Reply: {}",reply);
                         sock.send_to(reply.as_bytes(), a).unwrap();  
                     });
                     continue;
