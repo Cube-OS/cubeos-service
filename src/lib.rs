@@ -124,10 +124,20 @@ pub use ::variant_count;
 pub use ::dialoguer;
 // #[cfg(feature = "ground")]
 // pub use ::ground_handle;
-// #[cfg(feature = "ground")]
-// pub use ::strum;
-// #[cfg(feature = "ground")]
-// pub use ::strum_macros;
+#[cfg(feature = "ground")]
+pub use ::strum;
+#[cfg(feature = "ground")]
+pub use ::strum_macros;
+#[cfg(feature = "ground")]
+pub use ::syn;
+#[cfg(feature = "ground")]
+pub use ::quote;
+#[cfg(feature = "ground")]
+pub use ::proc_macro2;
+#[cfg(feature = "ground")]
+pub use ::cargo_metadata;
+#[cfg(feature = "ground")]
+pub use ::print_json;
 
 #[cfg(feature = "app")]
 pub use ::lazy_static::lazy_static;
