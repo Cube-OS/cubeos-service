@@ -28,17 +28,20 @@ syslog = { version = "^6.0.1"}
 cubeos-telemetry-db = { git = "ssh://git@github.com/Cube-OS/telemetry-db-api", optional = true}
 diesel = { version = "1.0.0", features = ["sqlite"], optional = true}
 
-dialoguer = {version = "0.10.2", optional = true}
-strum = {version = "0.24", optional = true}
-strum_macros = {version = "0.24", optional = true}
+dialoguer = {version = "0.10.2"}
+# strum = {version = "0.24", optional = true}
+# strum_macros = {version = "0.24", optional = true}
 lazy_static = {version = "1.4.0", optional = true}
-ground-handle = { git = "ssh://git@github.com/Cube-OS/ground", optional = true}
+# ground-handle = { git = "ssh://git@github.com/Cube-OS/ground", optional = true}
+# ground-handle = { path = "../ground", optional = true}
 
 # features enable conditional compiling,
 # features cannot be combined in one compilation
 [features]
 default = []
-ground = ["dep:ground-handle","dep:strum","dep:strum_macros","dep:dialoguer"]
+ground = []
+# terminal = ["dep:dialoguer"]
+# ground = ["dep:ground-handle","dep:strum","dep:strum_macros","dep:dialoguer"]
 app = ["dep:lazy_static"]
 nix = ["dep:nix"]
 diesel = ["dep:diesel","dep:cubeos-telemetry-db"]

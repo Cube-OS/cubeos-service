@@ -23,13 +23,16 @@
 use kubos_system::Config;
 use log::info;
 use std::collections::HashMap;
-use std::net::{SocketAddr};
+use std::net::{SocketAddr,UdpSocket};
 use std::sync::{Arc, RwLock};
 use std::str::FromStr;
 use crate::error::*;
+use udp_rs::Message;
+use log::*;
+use std::thread;
 
 /// Type definition for a CLI tool
-pub type OutputFn = dyn Fn(UdpPassthrough) + std::marker::Send + std::marker::Sync + 'static;
+pub type OutputFn = dyn Fn(String, SocketAddr)->String + std::marker::Send + std::marker::Sync + 'static;
 
 // Struct that enables passthrough of translated GraphQL inputs
 // to UDP service on satellite
@@ -138,7 +141,7 @@ impl Context {
 pub struct Service {
     config: Config,
     pub context: Context,
-    output: Option<Arc<OutputFn>>, 
+    json_handler: Option<Arc<OutputFn>>, 
 }
 
 impl Service {
@@ -155,7 +158,7 @@ impl Service {
         config: Config,
         socket: String,
         target: String,
-        output: Option<Arc<OutputFn>>,
+        json_handler: Option<Arc<OutputFn>>,
     ) -> Self
     {
             let context = Context {
@@ -163,7 +166,7 @@ impl Service {
             udp_pass: UdpPassthrough::new(socket,target),
         };
 
-        Service { config, context, output }
+        Service { config, context, json_handler }
     }
 
     /// Starts the service's GraphQL/UDP server. This function runs
@@ -175,7 +178,35 @@ impl Service {
     /// cannot be bound (like if they are already in use), or if for some reason the socket fails
     /// to receive a message.
     pub fn start(self) {
-        let output = self.output.unwrap();
-        output(self.context.udp_pass);
+        let socket = UdpSocket::bind(self.context.udp_pass.socket).expect("couldn't bind to address");
+        let target = self.context.udp_pass.to;
+        // loop for JSON handling
+        // listens for JSON messages on socket
+        // uses json_handler function supplied by service to handle the cmd
+        // returns answer to sender
+        #[cfg(feature = "debug")]
+        println!("Start listener on: {:?}", socket);
+        let mut buf = [0; 1024];
+        loop{
+            match socket.recv_from(&mut buf) {                
+                Ok((b,a)) => {                       
+                    let msg = String::from_utf8(buf[..b].to_vec()).unwrap();
+                    #[cfg(feature = "debug")]
+                    println!("Received message: {:?} from {:?}", msg, a);  
+                    let sock = UdpSocket::bind("0.0.0.0:0").expect("couldn't bind to address");                
+                    // let msg = String::from_utf8(msg).unwrap();                   
+                    let handler = self.json_handler.as_ref().unwrap().clone();
+                    let target = target.clone();
+                    thread::spawn(move || {
+                        let reply = handler(msg,target);
+                        #[cfg(feature = "debug")]
+                        println!("Reply: {}",reply);
+                        sock.send_to(reply.as_bytes(), a).unwrap();  
+                    });
+                    continue;
+                }
+                Err(_) => continue,
+            };
+        }       
     }
 }

@@ -29,16 +29,23 @@ pub struct Command<C,T> {
     // Data from Vec<u8>,
     pub data: T,
 }
-impl<'a,C: TryFrom<u16>, T: Serialize + Deserialize<'a>> Command<C,T>
+impl<'a,C: TryFrom<u16> + Clone, T: Serialize + Deserialize<'a>> Command<C,T>
     where 
         u16: TryFrom<C>,
         Error: From<<C as TryFrom<u16>>::Error>,
         Error: From<<u16 as TryFrom<C>>::Error>,
     {
-    pub fn new(&self, id: C, msg: &'a Vec<u8>) -> Self {
-        Self {
+    // pub fn new(&self, id: C, msg: &'a Vec<u8>) -> Self {
+    //     Self {
+    //         id,
+    //         data: bincode::deserialize(&msg).unwrap(),
+    //     }
+    // }
+
+    pub fn new(id: C, data: T) -> Command<C,T> {
+        Command {
             id,
-            data: bincode::deserialize(&msg).unwrap(),
+            data,
         }
     }
 
@@ -51,6 +58,15 @@ impl<'a,C: TryFrom<u16>, T: Serialize + Deserialize<'a>> Command<C,T>
             id => Ok(Command{id: C::try_from(id)?,data: bincode::deserialize::<T>(&msg[2..])?}),            
         }
     }
+
+    pub fn ser(&self) -> Result<Vec<u8>> {
+        let mut buf: Vec<u8> = Vec::new();
+        let id = self.id.clone();
+
+        buf.append(&mut u16::try_from(id)?.to_be_bytes().to_vec());
+        buf.append(&mut bincode::serialize(&self.data)?);
+        Ok(buf)
+    }    
 
     // serializer function
     pub fn serialize(id: C, msg: T) -> Result<Vec<u8>> {
@@ -68,11 +84,11 @@ macro_rules! command_id{
         $($type: ident,)+
     ) => {
         use std::convert::{TryFrom,TryInto};
-        use variant_count::VariantCount;
+        use cubeos_service::variant_count::VariantCount;
         use cubeos_service::{Error as CubeOSError, Result as CubeOSResult};
         use std::ops::AddAssign;
         use std::fmt;
-        use serde::Serialize;
+        use serde::{Serialize,Deserialize};
 
         // helper functions to implement the TryFrom<u16> for udp and ground macros
         // increments a usize and outputs the value
@@ -83,7 +99,7 @@ macro_rules! command_id{
         }
 
         // Construct CommandID Enum
-        #[derive(Clone,Copy,Debug,PartialEq,VariantCount,Serialize)]
+        #[derive(Clone,Copy,Debug,PartialEq,VariantCount,Serialize,Deserialize)]
         pub enum CommandID {
             $(
                 $type,
