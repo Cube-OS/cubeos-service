@@ -120,10 +120,8 @@ pub use ::serde;
 pub use ::std::convert;
 pub use ::variant_count;
 
-// #[cfg(feature = "terminal")]
+#[cfg(feature = "ground")]
 pub use ::dialoguer;
-// #[cfg(feature = "ground")]
-// pub use ::ground_handle;
 #[cfg(feature = "ground")]
 pub use ::strum;
 #[cfg(feature = "ground")]
