@@ -203,7 +203,7 @@ impl Service {
                         println!("Reply: {}",reply);
                         while reply.len() > 65507 {
                             let split = reply.split_off(65507);
-                            sock.send_to(first.as_bytes(), a).unwrap();
+                            sock.send_to(reply.as_bytes(), a).unwrap();
                             reply = split;
                         }
                         sock.send_to(reply.as_bytes(), a).unwrap();  
