@@ -198,7 +198,7 @@ impl Service {
                     let handler = self.json_handler.as_ref().unwrap().clone();
                     let target = target.clone();
                     thread::spawn(move || {
-                        let reply = handler(msg,target);
+                        let mut reply = handler(msg,target);
                         #[cfg(feature = "debug")]
                         println!("Reply: {}",reply);
                         while reply.len() > 65507 {
