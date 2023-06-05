@@ -16,7 +16,7 @@ macro_rules! app_macro{
 
         lazy_static! {
             static ref HOST_URL: String = {
-                Config::new(stringify!($service))
+                Config::new(stringify!($service).replace("_","-"))
                     .unwrap()
                     .hosturl()
                     .unwrap()                    
