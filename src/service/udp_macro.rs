@@ -122,6 +122,18 @@ macro_rules! count {
     ( $x:tt $($xs:tt)* ) => (1usize + count!($($xs)*));
 }
 
+// #[macro_export]
+// macro_rules! run {
+//     // Base case: 0 or more input parameters
+//     ($f:expr; $sub:expr, $in:expr, $($params:expr),*) => {
+//         $f($sub, $in, $($params),*);
+//     };
+//     // Recursive case: one or more arguments left
+//     ($f:expr; $sub:expr, $in:expr, $next_arg:expr, $($rest:tt)*) => {
+//         run!($f, $sub, $in, $next_arg, $($rest)*);
+//     };
+// }
+
 #[macro_export]
 macro_rules! run {    
     // 0 input parameter
