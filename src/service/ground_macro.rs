@@ -58,6 +58,7 @@ macro_rules! service_macro {
             $($type_m,)*
         }
 
+        #[cfg(not(feature = "toobig"))]
         print_json!(
             $($type_q$(, $msg_q, $cmd_q),*;)*
             $($type_m$(, $msg_m, $cmd_m),*;)*
