@@ -134,8 +134,6 @@ pub use ::quote;
 pub use ::proc_macro2;
 #[cfg(feature = "ground")]
 pub use ::cargo_metadata;
-#[cfg(feature = "ground")]
-pub use ::print_json;
 
 #[cfg(feature = "app")]
 pub use ::lazy_static::lazy_static;
