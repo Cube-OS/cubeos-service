@@ -48,4 +48,3 @@ nix = ["dep:nix"]
 diesel = ["dep:diesel","dep:cubeos-telemetry-db"]
 # all features can be combined with debug
 debug = ['print-json/debug']
-toobig = []
