@@ -126,14 +126,6 @@ pub use ::dialoguer;
 pub use ::strum;
 #[cfg(feature = "ground")]
 pub use ::strum_macros;
-#[cfg(feature = "ground")]
-pub use ::syn;
-#[cfg(feature = "ground")]
-pub use ::quote;
-#[cfg(feature = "ground")]
-pub use ::proc_macro2;
-#[cfg(feature = "ground")]
-pub use ::cargo_metadata;
 
 #[cfg(feature = "app")]
 pub use ::lazy_static::lazy_static;
