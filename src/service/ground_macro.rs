@@ -44,11 +44,6 @@ macro_rules! service_macro {
         use std::convert::{From,Into};
         use std::io::Write;
         use std::fs::Metadata;
-        use print_json::print_json;
-        use syn::*;
-        use proc_macro2::*;
-        use quote::*;
-        use cargo_metadata::*;
 
         command_id!{
             // Ping,
