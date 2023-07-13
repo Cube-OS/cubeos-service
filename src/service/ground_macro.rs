@@ -58,12 +58,6 @@ macro_rules! service_macro {
             $($type_m,)*
         }
 
-        print_json!(
-            $($type_q$(, $msg_q, $cmd_q),*;)*
-            $($type_m$(, $msg_m, $cmd_m),*;)*
-        );
-        // $(print_json!($type_m,$($msg_m,$cmd_m),*);)*
-
         $(#[derive(Serialize,Deserialize,Debug)]
         pub struct $type_q {
             $(pub $msg_q: $cmd_q,)*
