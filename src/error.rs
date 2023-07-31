@@ -601,15 +601,15 @@ impl From<diesel::result::Error> for Error {
 impl From<Error> for diesel::result::Error {
     fn from(e: Error) -> diesel::result::Error {
         match e {
-            Error::Diesel(0) => diesel::result::Error::InvalidCString(""),
-            Error::Diesel(1) => diesel::result::Error::DatabaseError("", Box::new(diesel::result::Error::NotFound)),
+            Error::Diesel(0) => diesel::result::Error::InvalidCString(std::ffi::CString::new(b"f\0oo".to_vec()).unwrap_err()),
+            Error::Diesel(1) => diesel::result::Error::DatabaseError(diesel::result::DatabaseErrorKind::UniqueViolation, Box::<String>::new("".into())),
             Error::Diesel(2) => diesel::result::Error::NotFound,
-            Error::Diesel(3) => diesel::result::Error::QueryBuilderError(""),
-            Error::Diesel(4) => diesel::result::Error::DeserializationError(""),
-            Error::Diesel(5) => diesel::result::Error::SerializationError(Box::new()),
+            Error::Diesel(3) => diesel::result::Error::QueryBuilderError("".into()),
+            Error::Diesel(4) => diesel::result::Error::DeserializationError("".into()),
+            Error::Diesel(5) => diesel::result::Error::SerializationError(Box::new(diesel::result::Error::NotFound)),
             Error::Diesel(6) => diesel::result::Error::RollbackTransaction,
             Error::Diesel(7) => diesel::result::Error::AlreadyInTransaction,
-            _ => diesel::result::Error::InvalidCString(NulError),
+            _ => diesel::result::Error::InvalidCString(std::ffi::CString::new(b"f\0oo".to_vec()).unwrap_err()),
         }
     }
 }
