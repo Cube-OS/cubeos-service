@@ -82,7 +82,7 @@ Service::new(
 ).start();
 ```
 
-## Compile your service (requires rust 1.55.0 or above)
+## Compile your service (requires rust 1.67.0 or above)
 As shown above, **cubeos-service** uses features so the user can decide the use case at compile time.
 
 **UDP handling**
@@ -129,3 +129,12 @@ CubeOS uses git ssh URL's for dependencies within the Organisation. Pls make sur
 
 **add key (in repo)**
 `ssh-add ~/.ssh/$your-key`
+
+Add the targets to your $HOME/.cargo/config file:
+```
+[target.armv5te-unknown-linux-gnueabi]
+linker = "/usr/bin/iobc_toolchain/usr/bin/arm-linux-gcc"
+
+[target.arm-unknown-linux-gnueabihf]
+linker = "/usr/bin/bbb_toolchain/usr/bin/arm-linux-gcc"
+```
