@@ -19,11 +19,11 @@
 // Define which implementation of the Service and service-macro!
 // are used depending on the selected feature
 
-#[cfg(not(feature = "ground"))]
+#[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
 mod udp;
-#[cfg(not(feature = "ground"))]
+#[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
 mod udp_macro;
-#[cfg(not(feature = "ground"))]
+#[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
 pub use udp::{Context,Service};
 
 #[cfg(feature = "ground")]
@@ -32,3 +32,10 @@ mod ground;
 mod ground_macro;
 #[cfg(feature = "ground")]
 pub use ground::{Context,Service,UdpPassthrough};
+
+#[cfg(feature = "terminal")]
+mod terminal;
+#[cfg(feature = "terminal")]
+mod terminal_macro;
+#[cfg(feature = "terminal")]
+pub use terminal::{Context,Service,UdpPassthrough};
