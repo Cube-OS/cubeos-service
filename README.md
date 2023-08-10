@@ -121,6 +121,46 @@ Run the ground service on a computer connected to your OBC via SLIP or Ethernet 
 To open the GraphQL environment, use your browser to navigate to:
 `$IP:$port/graphiql`
 
+## App
+This crate now also features an `app_macro!()` and `App` type similar to the Service type.
+
+The following example shows a way how to set-up a Cube-OS App:
+```
+use cubeos-service::*;
+
+app_macro!{
+  example_service: Example {
+    query: GetValue => fn get_value(&self, get: ExampleEnum) -> Result<ExampleResult>; out: ExampleResult;
+    mutation: SetValue => fn set_value(&self, set: ExampleInput) -> Result<()>;
+  }
+}
+
+fn app_logic() -> Result<()> {
+  let result = Example::get_value(ExampleEnum::All)?;
+
+  println!("{}",result);
+
+  let set = ExampleInput::default();
+
+  Example::set_value(set)?;
+
+  let result = Example::get_value(ExampleEnum::All)?;
+
+  println!("{}",result);
+}
+
+fn main() -> Result<()> {
+  // Logger
+  Logger::init();
+
+  // Set pin-logic on BBB to turn on payload (if needed)
+  let pins: u8 = 2;
+
+  Ok(App::new(app_logic,pins,"example-service").run()?)
+  
+}
+```
+
 ## Troubleshooting
 CubeOS uses git ssh URL's for dependencies within the Organisation. Pls make sure to add your to the repository:
 
