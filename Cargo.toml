@@ -39,13 +39,15 @@ cargo_metadata = { version = "0.15", optional = true}
 print-json = { git = "ssh://git@github.com/Cube-OS/print-json", optional = true}
 terminal-macro = { git = "ssh://git@github.com/Cube-OS/terminal-macro", optional = true}
 
+gpio = { version = "0.4", optional = true}
+
 # features enable conditional compiling,
 # features cannot be combined in one compilation
 [features]
 default = []
 ground = ['strum', 'strum_macros', 'dialoguer', 'syn', 'proc-macro2', 'quote', 'cargo_metadata', 'print-json']
 terminal = ['strum', 'strum_macros', 'dialoguer', 'terminal-macro']
-app = ["dep:lazy_static"]
+app = ["dep:lazy_static", "gpio"]
 nix = ["dep:nix"]
 diesel = ["dep:diesel","dep:cubeos-telemetry-db"]
 # all features can be combined with debug
