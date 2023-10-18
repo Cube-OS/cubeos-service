@@ -48,7 +48,7 @@ pub enum Error {
     #[fail(display = "Other Error")]
     Other,
     /// Failure Error
-    #[fail(display = "Failure Error")]
+    #[fail(display = "Failure Error {}", _0)]
     Failure(String),
     /// IO Error
     #[fail(display = "IO Error")]

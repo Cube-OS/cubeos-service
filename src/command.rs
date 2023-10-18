@@ -105,6 +105,18 @@ macro_rules! command_id{
                 $type,
             )+
         }
+
+        impl FromStr for CommandID {
+            type Err = CubeOSError;
+            fn from_str(s: &str) -> CubeOSResult<Self> {
+                match s {
+                    $(
+                        stringify!($type) => Ok(CommandID::$type),
+                    )+
+                    _ => Err(CubeOSError::NoCmd)
+                }
+            }
+        }
         // implementation of conversion of u16 to CommandID
         impl TryFrom<u16> for CommandID {
             type Error = CubeOSError;

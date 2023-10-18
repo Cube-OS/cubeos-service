@@ -19,11 +19,14 @@
 // Define which implementation of the Service and service-macro!
 // are used depending on the selected feature
 
-#[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
+// #[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
+#[cfg(any(not(any(feature = "ground", feature = "terminal", feature = "app", feature = "gs-auto", feature = "gs-schedule")), all(feature = "app", feature = "service")))]
 mod udp;
-#[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
+// #[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
+#[cfg(any(not(any(feature = "ground", feature = "terminal", feature = "app", feature = "gs-auto", feature = "gs-schedule")), all(feature = "app", feature = "service")))]
 mod udp_macro;
-#[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
+// #[cfg(not(any(feature = "ground",feature = "terminal",feature = "app")))]
+#[cfg(any(not(any(feature = "ground", feature = "terminal", feature = "app", feature = "gs-auto", feature = "gs-schedule")), all(feature = "app", feature = "service")))]
 pub use udp::{Context,Service};
 
 #[cfg(feature = "ground")]
@@ -39,3 +42,17 @@ mod terminal;
 mod terminal_macro;
 #[cfg(feature = "terminal")]
 pub use terminal::{Context,Service,UdpPassthrough};
+
+#[cfg(feature = "gs-auto")]
+mod gs_auto;
+#[cfg(feature = "gs-auto")]
+mod gs_auto_macro;
+#[cfg(feature = "gs-auto")]
+pub use gs_auto::{Context,Service,UdpPassthrough};
+
+#[cfg(feature = "gs-schedule")]
+mod gs_schedule;
+#[cfg(feature = "gs-schedule")]
+mod gs_schedule_macro;
+#[cfg(feature = "gs-schedule")]
+pub use gs_schedule::{Context,Service};

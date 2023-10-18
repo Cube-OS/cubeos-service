@@ -29,6 +29,7 @@ macro_rules! service_macro {
     ) => {
         use cubeos_service::command_id;
         use std::env::Args;
+        use std::str::FromStr;
         use crate::$krate::$strukt as Subsystem;
 
         command_id!{
@@ -89,8 +90,9 @@ macro_rules! service_macro {
                     let data = command.data;
                     match run!(Subsystem::$func; sub, data $(,$cmd)*) {
                         Ok(x) => {
+                            println!("Reply: {:?}",x);
                             let r = Command::serialize(command.id,x)?;
-                            #[cfg(feature = "debug")]
+                            // #[cfg(feature = "debug")]
                             println!("Reply: {:?}",r);
                             // Ok(Command::<CommandID,$rep>::serialize(command.id,x)?),
                             Ok(r)
