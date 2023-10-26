@@ -23,3 +23,4 @@ mod app;
 mod app_macro;
 
 pub use app::App;
+pub use app::Power;

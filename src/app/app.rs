@@ -23,7 +23,7 @@ impl Power {
         }
     }
 
-    fn initialize_payload(&mut self) -> Result<()> {   
+    pub fn initialize_payload(&mut self) -> Result<()> {   
         let pin1_value = self.io & 0b001;
         let pin2_value = (self.io & 0b010) >> 1;
         let pin4_value = (self.io & 0b100) >> 2;
@@ -34,7 +34,7 @@ impl Power {
         Ok(())
     }
     
-    fn shutdown(&mut self) -> Result<()>{
+    pub fn shutdown(&mut self) -> Result<()>{
         self.pin4.set_value(0)?;
         self.pin2.set_value(0)?;
         self.pin1.set_value(0)?;
