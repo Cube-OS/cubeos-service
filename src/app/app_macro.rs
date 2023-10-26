@@ -29,7 +29,7 @@ macro_rules! app_macro{
                 pub fn $func($($msg:$cmd),*) -> Result<$rep> {
                     let app_url = "0.0.0.0:0".to_string();
                     let connection = Connection::from_path(app_url,HOST_URL.to_string());
-                    match Command::<CommandID,$rep>::parse(&connection.transfer_timeout(Command::serialize(CommandID::$type,($($msg),*))?,Duration::from_secs(1))?) {
+                    match Command::<CommandID,$rep>::parse(&connection.transfer_timeout(Command::serialize(CommandID::$type,($($msg),*))?,std::time::Duration::from_secs(1))?) {
                         Ok(c) => Ok(c.data),
                         Err(e) => Err(e),
                     }                
