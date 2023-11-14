@@ -11,7 +11,7 @@ log = "^0.4.0"
 variant_count = "1.1"
 
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
-pkg-config = "= 0.3.15"
+pkg-config = "= 0.3.26"
 
 kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
