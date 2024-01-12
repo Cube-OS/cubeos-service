@@ -1,6 +1,6 @@
 [package]
 name = "cubeos-service"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Patrick Oppel <patrick.oppel94@gmail.com>"]
 edition = "2018"
 
@@ -13,7 +13,8 @@ variant_count = "1.1"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
 pkg-config = "= 0.3.15"
 
-kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
+# kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
+kubos-system = { path = "../system-api"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
 udp-rs = { git = "ssh://git@github.com/Cube-OS/udp-rs"}
 failure = "0.1.8"
@@ -31,26 +32,19 @@ diesel = { version = "1.0.0", features = ["sqlite"], optional = true}
 dialoguer = {version = "0.10.2", optional = true}
 strum = {version = "0.24", optional = true}
 strum_macros = {version = "0.24", optional = true}
-lazy_static = {version = "1.4.0", optional = true}
-syn = { version = "2.0", features = ["full"] , optional = true}
-proc-macro2 = { version = "1.0", optional = true}
-quote = { version = "1.0", optional = true}
-cargo_metadata = { version = "0.15", optional = true}
-print-json = { git = "ssh://git@github.com/Cube-OS/print-json", optional = true}
 terminal-macro = { git = "ssh://git@github.com/Cube-OS/terminal-macro", optional = true}
 
+lazy_static = {version = "1.4.0", optional = true}
 gpio = { version = "0.4", optional = true}
+
 
 # features enable conditional compiling,
 # features cannot be combined in one compilation
 [features]
 default = []
-ground = ['strum', 'strum_macros', 'dialoguer', 'syn', 'proc-macro2', 'quote', 'cargo_metadata', 'print-json']
 terminal = ['strum', 'strum_macros', 'dialoguer', 'terminal-macro']
 app = ["dep:lazy_static", "gpio"]
 nix = ["dep:nix"]
 diesel = ["dep:diesel","dep:cubeos-telemetry-db"]
 # all features can be combined with debug
-debug = ['print-json/debug']
-gs-auto = []
-gs-schedule = ['strum','strum_macros', 'dialoguer', 'terminal-macro']
+debug = []

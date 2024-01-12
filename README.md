@@ -58,7 +58,7 @@ To accomodate the different use cases, the `Service` has been altered slightly a
 
 In the default UDP case, the GraphQL Query and Mutationroot are replaced by the `udp_handler` function:
 ```
-#[cfg(not(any(feature = "ground",feature = "graphql")))]
+#[cfg(not(feature = "terminal"))]
 //Start up UDP server
 Service::new(
     service_config,
@@ -72,13 +72,15 @@ The ground case, doesn't need the Subsystem, but adds a socket IP address,
 which can be any free Port on the Debug/GroundStation computer, and the target service's IP address on the satellite.
 It is handy to read them in from a `config.toml` file, but not necessary.
 ```
-#[cfg(feature = "ground")]
+#[cfg(feature = "termial")]
 // Start ground service
 Service::new(
     service_config,
     socket.as_str().unwrap().to_string(),
     target.as_str().unwrap().to_string(),
-    Some(Arc::new(terminal)),
+    std::env::args().collect::<Vec<String>>(),
+    Arc::new(input),
+    Arc::new(output),
 ).start();
 ```
 
@@ -95,14 +97,14 @@ or with cross compiler (requires KubOS SDK)
 
 `cargo kubos -c build --target kubos-linux-beaglebone-gcc -- --release` (for Beaglebone Black)
 
-**Ground:**
+**Terminal:**
 
-`cargo build --features ground`
+`cargo build --features terminal`
 
 Additionally the UDP handling and Ground features can be combined with **debug**, e.g.:
 `cargo build --features debug`
 
-`cargo build --features ground,debug`
+`cargo build --features terminal,debug`
 
 ## Run a service
 To run a service simply transfer the executable to the satellite or ground station to a desired folder (e.g. /home/kubos/) and run:
@@ -114,12 +116,18 @@ Alternatively run the executable with the -c flag to specify a config file:
 
 `./executable -c /path/to/config`
 
-### Run the Ground Service
-Run the ground service on a computer connected to your OBC via SLIP or Ethernet or a radio link (which simulates an IP network) with:
-`./ground_executable -c /path/to/config`
+### Run the Terminal Service
+Run the terminal service on a computer connected to your OBC via SLIP or Ethernet or a radio link (which simulates an IP network). The terminal service can be called in 3 modes.
 
-To open the GraphQL environment, use your browser to navigate to:
-`$IP:$port/graphiql`
+1. Manual Cmd 
+`./terminal_executable -c /path/to/config`
+
+2. Planning commands for a later contact (see TODO! for execution of planned commands)
+`./terminal_executable -c /path/to/config -p`
+
+3. Execution of single cmd (this is used to run planned commands by the TODO!)
+`./terminal_executable -c /path/to/config Cmd Arguments`
+where Arguments are the inputs for a Cmd and optional
 
 ## App
 This crate now also features an `app_macro!()` and `App` type similar to the Service type.

@@ -26,10 +26,23 @@ use std::collections::HashMap;
 use std::net::{SocketAddr};
 use std::sync::{Arc, RwLock};
 use std::str::FromStr;
+use std::io::Write;
 use crate::error::*;
 
 /// Type definition for a CLI tool
-pub type OutputFn = dyn Fn(UdpPassthrough) + std::marker::Send + std::marker::Sync + 'static;
+pub type InputFn = dyn Fn() -> Result<String> + std::marker::Send + std::marker::Sync + 'static;
+pub type OutputFn = dyn Fn(Vec<String>,UdpPassthrough) -> String + std::marker::Send + std::marker::Sync + 'static;
+
+pub struct Functions {
+    pub input: Arc<InputFn>,
+    pub output: Arc<OutputFn>,
+}
+
+pub enum Mode {
+    Input,
+    Run,
+    Terminal,    
+}
 
 // Struct that enables passthrough of translated GraphQL inputs
 // to UDP service on satellite
@@ -138,7 +151,9 @@ impl Context {
 pub struct Service {
     config: Config,
     pub context: Context,
-    output: Option<Arc<OutputFn>>, 
+    command: Option<Vec<String>>,
+    functions: Functions,
+    mode: Mode,
 }
 
 impl Service {
@@ -155,15 +170,30 @@ impl Service {
         config: Config,
         socket: String,
         target: String,
-        output: Option<Arc<OutputFn>>,
+        command: Vec<String>,
+        input: Arc<InputFn>,
+        output: Arc<OutputFn>,        
     ) -> Self
     {
-            let context = Context {
+        let context = Context {
             storage: Arc::new(RwLock::new(HashMap::new())),
             udp_pass: UdpPassthrough::new(socket,target),
         };
+        let functions = Functions {
+            output,
+            input,
+        };
+        let (mode, command) = if command.len() < 4 {
+            (Mode::Terminal, None)
+        } else if command.contains(&"-s".to_string()) {
+            (Mode::Terminal, Some(command[3..].to_vec()))
+        } else if command.contains(&"-p".to_string()) {
+            (Mode::Input, None)
+        } else {
+            (Mode::Run, Some(command[3..].to_vec()))
+        };
 
-        Service { config, context, output }
+        Service { config, context, command, functions, mode }
     }
 
     /// Starts the service's GraphQL/UDP server. This function runs
@@ -175,7 +205,84 @@ impl Service {
     /// cannot be bound (like if they are already in use), or if for some reason the socket fails
     /// to receive a message.
     pub fn start(self) {
-        let output = self.output.unwrap();
-        output(self.context.udp_pass);
+        let app_name = std::env::current_exe()
+            .unwrap()
+            .file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_owned();        
+        
+        match self.mode {
+            Mode::Input => {
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open("command.txt")
+                    .unwrap();
+                let input = self.functions.input.clone();
+                loop {
+                    match input() {
+                        Ok(result) => {
+                            let data = format!("{}: {}",app_name, result);
+                            writeln!(file, "{}", data).unwrap();
+                            println!("Write to file: {}",data);
+                        },
+                        Err(e) => {
+                            println!("{}", e);
+                        },
+                    }
+                }
+            },
+            Mode::Run => {
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open("output.txt")
+                    .unwrap();
+                let output = self.functions.output.clone();
+                let result = output(self.command.unwrap(), self.context.udp_pass.clone());
+                    
+                let data = format!("{}: {:?}", app_name, result);
+                writeln!(file, "{}", data).unwrap();
+                println!("{}",data);            
+            }
+            Mode::Terminal => {
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open("output.txt")
+                    .unwrap();
+                let input = self.functions.input.clone();
+                let output = self.functions.output.clone();                
+                loop {
+                    match input() {
+                        Ok(result) => {
+                            let parts = result.split(|c| 
+                                c == ':' ||
+                                c == '{' ||
+                                c == ',')
+                            .map(|s| s.trim_matches(|c| 
+                                c == ' ' || 
+                                c == '}' || 
+                                c == '{' || 
+                                c == ','))
+                            .map(|s| s.to_string()) // Convert &str to String
+                            .collect::<Vec<String>>(); // Collect into Vec<String>
+                            
+                            let result = output(parts, self.context.udp_pass.clone());
+                            println!("{}",result);
+                            if self.command.is_some() {                                        
+                                let data = format!("{}: {:?}", app_name, result);
+                                writeln!(file, "{}", data).unwrap();
+                            }
+                        },
+                        Err(e) => {
+                            println!("{}", e);
+                        },
+                    }
+                }                            
+            },
+        }
     }
 }
