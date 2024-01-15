@@ -28,7 +28,6 @@ use std::sync::{Arc, RwLock};
 use crate::error::*;
 use udp_rs::Message;
 use std::thread;
-use std::sync::Mutex;
 
 /// Type definition for a "UDP" server pointer
 pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>> + std::marker::Send + std::marker::Sync + 'static;

@@ -120,23 +120,13 @@ pub use ::serde;
 pub use ::std::convert;
 pub use ::variant_count;
 
-#[cfg(any(feature = "ground",feature = "terminal",feature = "gs-schedule"))]
+#[cfg(feature = "terminal")]
 pub use ::dialoguer;
-#[cfg(any(feature = "ground",feature = "terminal",feature = "gs-schedule"))]
+#[cfg(feature = "terminal")]
 pub use ::strum;
-#[cfg(any(feature = "ground",feature = "terminal",feature = "gs-schedule"))]
+#[cfg(feature = "terminal")]
 pub use ::strum_macros;
-#[cfg(feature = "ground")]
-pub use ::syn;
-#[cfg(feature = "ground")]
-pub use ::quote;
-#[cfg(feature = "ground")]
-pub use ::proc_macro2;
-#[cfg(feature = "ground")]
-pub use ::cargo_metadata;
-#[cfg(feature = "ground")]
-pub use ::print_json;
-#[cfg(any(feature = "terminal",feature = "gs-schedule"))]
+#[cfg(feature = "terminal")]
 pub use ::terminal_macro;
 
 #[cfg(feature = "app")]
@@ -144,7 +134,7 @@ pub use ::lazy_static::lazy_static;
 
 #[cfg(feature = "app")]
 mod app;
-#[cfg(any(feature = "default", feature = "ground", feature = "terminal", feature = "gs-auto", feature = "gs-schedule"))]
+#[cfg(any(feature = "default", feature = "terminal"))]
 mod service;
 
 mod command;
@@ -155,7 +145,7 @@ mod error;
 pub use crate::error::{Error,Result};
 pub use crate::ping::*;
 pub use crate::last::*;
-#[cfg(any(feature = "default", feature = "ground", feature = "terminal",  feature = "gs-auto", feature = "gs-schedule"))]
+#[cfg(any(feature = "default", feature = "terminal"))]
 pub use crate::service::*;
 #[cfg(feature = "app")]
 pub use crate::app::*;
