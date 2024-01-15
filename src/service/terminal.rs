@@ -21,7 +21,7 @@
 // 
 
 use kubos_system::Config;
-use log::info;
+use log::{debug,info};
 use std::collections::HashMap;
 use std::net::{SocketAddr};
 use std::sync::{Arc, RwLock};

@@ -31,6 +31,7 @@ macro_rules! service_macro {
     ) => {    
         use std::str::FromStr;
         use failure::Fail;
+        use log::{debug,info,error};
         use std::net::UdpSocket;
         use cubeos_service::serde_json::to_string_pretty;
         use cubeos_service::udp_rs::Message;
@@ -94,15 +95,18 @@ macro_rules! service_macro {
         
         pub fn output(mut command: Vec<String>, udp: UdpPassthrough) -> String {
             let mut arguments: Vec<String> = if command.len() > 1 {
-                command[1..].to_vec()
+                command[2..].iter().step_by(2).map(|s| format!("\"{}\"", s)).collect()
             } else {
                 Vec::new()
             };
+            let mut args_iter = arguments.iter();
             match CommandID::from_str(&command[0]) {
-                $(Ok(CommandID::$type_q) => {                    
+                $(Ok(CommandID::$type_q) => {  
+                    debug!("Arguments: {:?}", arguments);                 
                     let input: ($($cmd_q),*) = ($(
-                        serde_json::from_str::<$cmd_q>(&arguments.remove(0)).unwrap()
+                        serde_json::from_str::<$cmd_q>(&args_iter.next().unwrap()).unwrap()
                     ),*);
+                    debug!("Input: {:?}", input);
                     let cmd = match Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q, input) {
                         Ok(c) => c,
                         Err(e) => return handle_error(e),
@@ -128,7 +132,7 @@ macro_rules! service_macro {
                 },)*
                 $(Ok(CommandID::$type_m) => {
                     let input: ($($cmd_m),*) = ($(
-                        serde_json::from_str::<$cmd_m>(&arguments.remove(0)).unwrap()
+                        serde_json::from_str::<$cmd_m>(&args_iter.next().unwrap()).unwrap()
                     ),*);
                     let cmd = match Command::<CommandID,($($cmd_m),*)>::serialize(CommandID::$type_m, input) {
                         Ok(c) => c,
