@@ -13,8 +13,7 @@ variant_count = "1.1"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
 pkg-config = "= 0.3.15"
 
-# kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
-kubos-system = { path = "../system-api"}
+kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
 bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
 udp-rs = { git = "ssh://git@github.com/Cube-OS/udp-rs"}
 failure = "0.1.8"
@@ -32,8 +31,7 @@ diesel = { version = "1.0.0", features = ["sqlite"], optional = true}
 dialoguer = {version = "0.10.2", optional = true}
 strum = {version = "0.24", optional = true}
 strum_macros = {version = "0.24", optional = true}
-# terminal-macro = { git = "ssh://git@github.com/Cube-OS/terminal-macro", optional = true}
-terminal-macro = { path = "../Macros/terminal-macro", optional = true}
+terminal-macro = { git = "ssh://git@github.com/Cube-OS/terminal-macro", optional = true}
 
 lazy_static = {version = "1.4.0"}
 gpio = { version = "0.4"}
