@@ -92,72 +92,51 @@ macro_rules! service_macro {
                 _ => (&e).to_string(),
             }
         }
+
+        fn handle_id(mut cmd: Vec<u8>) -> Vec<u8> {
+            let mut first = cmd.remove(0);
+
+            let first_u16 = u16::from(first) + 1;
+            let mut buf = Vec::new();
+            buf.append(&mut first_u16.to_be_bytes().to_vec());
+            buf.append(&mut cmd);
+            buf
+        }
         
-        pub fn output(mut command: Vec<String>, udp: UdpPassthrough) -> String {
-            let mut arguments: Vec<String> = if command.len() > 1 {
-                command[2..].iter().step_by(2).map(|s| format!("\"{}\"", s)).collect()
-            } else {
-                Vec::new()
+        pub fn output(mut command: String, udp: UdpPassthrough) -> String {
+            let cmd_enum = serde_json::from_str::<Command>(&command).unwrap();
+
+            let cmd_ser = match bincode::serialize(&cmd_enum) {
+                Ok(c) => c,
+                Err(e) => return handle_error(CubeOSError::from(e)),
             };
-            let mut args_iter = arguments.iter();
-            match CommandID::from_str(&command[0]) {
-                $(Ok(CommandID::$type_q) => {  
-                    debug!("Arguments: {:?}", arguments);                 
-                    let input: ($($cmd_q),*) = ($(
-                        serde_json::from_str::<$cmd_q>(&args_iter.next().unwrap()).unwrap()
-                    ),*);
-                    debug!("Input: {:?}", input);
-                    let cmd = match Command::<CommandID,($($cmd_q),*)>::serialize(CommandID::$type_q, input) {
-                        Ok(c) => c,
-                        Err(e) => return handle_error(e),
-                    };
-                    match udp_passthrough(cmd,&udp) {
-                        Ok(buf) => {
-                            match Command::<CommandID,$rep_q>::parse(&buf) {
-                                Ok(c) => match serde_json::to_string_pretty(&<$($gql_q)?>::from(c.data)) {
-                                    Ok(s) => s,
-                                    Err(e) => e.to_string(),
-                                },
-                                Err(err) => match serde_json::to_string_pretty(&handle_error(bincode::deserialize::<CubeOSError>(&buf[1..]).unwrap())) {
-                                    Ok(s) => s,
-                                    Err(e) => e.to_string(),
-                                },
+            let cmd_fin = handle_id(cmd_ser);
+            match udp_passthrough(cmd_fin,&udp) {
+                Ok(buf) => {
+                    match u16::from_be_bytes([buf[0],buf[1]]) {
+                        0 => return handle_error(bincode::deserialize::<CubeOSError>(&buf[2..]).unwrap()).to_string(),
+                        65535 => return handle_error(bincode::deserialize::<CubeOSError>(&buf[2..]).unwrap()).to_string(),
+                        _ => {
+                            match cmd_enum {
+                                $(Command::$type_q(_) => {
+                                    match bincode::deserialize::<$($gql_q)?>(&buf[2..]) {
+                                        Ok(c) => match serde_json::to_string_pretty(&c) {
+                                            Ok(s) => s,
+                                            Err(e) => e.to_string(),
+                                        },
+                                        Err(e) => e.to_string(),
+                                    }                                    
+                                },)*
+                                $(Command::$type_m(_) => "Success".to_string(),)*
+                                _ => format!("Invalid command: {}", command),                            
                             }
-                        },
-                        Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
-                            Ok(s) => s,
-                            Err(e) => e.to_string(),
-                        },
+                        }
                     }
-                },)*
-                $(Ok(CommandID::$type_m) => {
-                    let input: ($($cmd_m),*) = ($(
-                        serde_json::from_str::<$cmd_m>(&args_iter.next().unwrap()).unwrap()
-                    ),*);
-                    let cmd = match Command::<CommandID,($($cmd_m),*)>::serialize(CommandID::$type_m, input) {
-                        Ok(c) => c,
-                        Err(e) => return handle_error(e),
-                    };
-                    match udp_passthrough(cmd,&udp) {
-                        Ok(buf) => {
-                            match Command::<CommandID,()>::parse(&buf) {
-                                Ok(c) => match serde_json::to_string_pretty(&c.data) {
-                                    Ok(s) => s,
-                                    Err(e) => e.to_string(),
-                                },
-                                Err(err) => match serde_json::to_string_pretty(&handle_error(bincode::deserialize::<CubeOSError>(&buf[1..]).unwrap())) {
-                                    Ok(s) => s,
-                                    Err(e) => e.to_string(),
-                                },
-                            }
-                        },
-                        Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
-                            Ok(s) => s,
-                            Err(e) => e.to_string(),
-                        },
-                    }
-                },)*
-                _ => format!("Invalid command: {}", command[0]),
+                },
+                Err(err) => match serde_json::to_string_pretty(&handle_error(CubeOSError::from(err))) {
+                    Ok(s) => s,
+                    Err(e) => e.to_string(),
+                },
             }
         }
 
@@ -167,14 +146,18 @@ macro_rules! service_macro {
                     $(CommandID::$type_q => {
                         println!("{}",stringify!($type_q));
                         let input = get_input::<$type_q>();
-                        let output = format!("{:?}",input);
-                        Ok(output)
+                        let cmd = Command::$type_q(input);
+                        // let output = format!("{:?}",input);
+                        // Ok(output)
+                        Ok(serde_json::to_string_pretty(&cmd).unwrap())
                     },)*
                     $(CommandID::$type_m => {
                         println!("{}",stringify!($type_m));
                         let input = get_input::<$type_m>();
-                        let output = format!("{:?}",input);
-                        Ok(output)
+                        let cmd = Command::$type_m(input);
+                        // let output = format!("{:?}",input);
+                        // Ok(output)
+                        Ok(serde_json::to_string_pretty(&cmd).unwrap())
                     },)*
                 },
                 Err(e) => Err(e),

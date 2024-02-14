@@ -85,13 +85,16 @@ macro_rules! service_macro {
                 $(CommandID::$type => {
                     // sub.set_last_cmd(msg.to_vec());
                     // Parse Command
-                    let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
-                    // Serialize 
-                    let data = command.data;
+                    // let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
+                    // // Serialize 
+                    // let data = command.data;
+                    let data = bincode::deserialize::<($($cmd),*)>(&msg[2..])?;
                     match run!(Subsystem::$func; sub, data $(,$cmd)*) {
                         Ok(x) => {
                             println!("Reply: {:?}",x);
-                            let r = Command::serialize(command.id,x)?;
+                            // let r = Command::serialize(command.id,x)?;
+                            let mut r = <u16>::try_from(CommandID::$type)?.to_be_bytes().to_vec();
+                            r.append(&mut bincode::serialize(&x)?);
                             // #[cfg(feature = "debug")]
                             println!("Reply: {:?}",r);
                             // Ok(Command::<CommandID,$rep>::serialize(command.id,x)?),

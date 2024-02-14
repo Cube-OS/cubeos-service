@@ -31,7 +31,7 @@ use crate::error::*;
 
 /// Type definition for a CLI tool
 pub type InputFn = dyn Fn() -> Result<String> + std::marker::Send + std::marker::Sync + 'static;
-pub type OutputFn = dyn Fn(Vec<String>,UdpPassthrough) -> String + std::marker::Send + std::marker::Sync + 'static;
+pub type OutputFn = dyn Fn(String,UdpPassthrough) -> String + std::marker::Send + std::marker::Sync + 'static;
 
 pub struct Functions {
     pub input: Arc<InputFn>,
@@ -151,7 +151,7 @@ impl Context {
 pub struct Service {
     config: Config,
     pub context: Context,
-    command: Option<Vec<String>>,
+    command: Option<String>,
     functions: Functions,
     mode: Mode,
 }
@@ -186,11 +186,11 @@ impl Service {
         let (mode, command) = if command.len() < 4 {
             (Mode::Terminal, None)
         } else if command.contains(&"-s".to_string()) {
-            (Mode::Terminal, Some(command[3..].to_vec()))
+            (Mode::Terminal, Some(command[3..].to_vec().concat()))
         } else if command.contains(&"-p".to_string()) {
             (Mode::Input, None)
         } else {
-            (Mode::Run, Some(command[3..].to_vec()))
+            (Mode::Run, Some(command[3..].to_vec().concat()))
         };
 
         Service { config, context, command, functions, mode }
@@ -257,18 +257,18 @@ impl Service {
                 let output = self.functions.output.clone();                
                 loop {
                     match input() {
-                        Ok(result) => {
-                            let parts = result.split(|c| 
-                                c == ':' ||
-                                c == '{' ||
-                                c == ',')
-                            .map(|s| s.trim_matches(|c| 
-                                c == ' ' || 
-                                c == '}' || 
-                                c == '{' || 
-                                c == ','))
-                            .map(|s| s.to_string()) // Convert &str to String
-                            .collect::<Vec<String>>(); // Collect into Vec<String>
+                        Ok(parts) => {
+                            // let parts = result.split(|c| 
+                            //     c == ':' ||
+                            //     c == '{' ||
+                            //     c == ',')
+                            // .map(|s| s.trim_matches(|c| 
+                            //     c == ' ' || 
+                            //     c == '}' || 
+                            //     c == '{' || 
+                            //     c == ','))
+                            // .map(|s| s.to_string()) // Convert &str to String
+                            // .collect::<Vec<String>>(); // Collect into Vec<String>
                             
                             let result = output(parts, self.context.udp_pass.clone());
                             println!("{}",result);
