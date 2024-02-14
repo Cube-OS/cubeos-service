@@ -136,7 +136,7 @@ impl <T: Clone + std::marker::Send + std::marker::Sync + 'static> Service<T> {
                     // let handler = udp_handler.lock().unwrap().clone();
                     let handler = udp_handler.clone();
                     let s = self.context.subsystem.clone();
-                    thread::spawn(move || {
+                    // thread::spawn(move || {
                         match handler(&mut s.try_write().unwrap(),&mut b) {
                             Ok(x) => {
                                 #[cfg(feature = "debug")]
@@ -147,7 +147,7 @@ impl <T: Clone + std::marker::Send + std::marker::Sync + 'static> Service<T> {
                                 sock.send_to(&handle_err(&e),&a).expect("couldn't send");
                             }
                         }
-                    });
+                    // });
                     continue;
                 }
                 Err(_) => continue,

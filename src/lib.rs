@@ -129,12 +129,12 @@ pub use ::strum_macros;
 #[cfg(feature = "terminal")]
 pub use ::terminal_macro;
 
-#[cfg(feature = "app")]
+// #[cfg(feature = "app")]
 pub use ::lazy_static::lazy_static;
 
-#[cfg(feature = "app")]
+// #[cfg(feature = "app")]
 mod app;
-#[cfg(any(feature = "default", feature = "terminal"))]
+// #[cfg(any(feature = "default", feature = "terminal"))]
 mod service;
 
 mod command;
@@ -145,10 +145,10 @@ mod error;
 pub use crate::error::{Error,Result};
 pub use crate::ping::*;
 pub use crate::last::*;
-#[cfg(any(feature = "default", feature = "terminal"))]
+// #[cfg(any(feature = "default", feature = "terminal"))]
 pub use crate::service::*;
-#[cfg(feature = "app")]
+// #[cfg(feature = "app")]
 pub use crate::app::*;
-pub use crate::command::Command;
+// pub use crate::command::Command;
 pub use kubos_system::logger as Logger;
 pub use kubos_system::Config;
