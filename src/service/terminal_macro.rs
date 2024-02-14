@@ -147,16 +147,12 @@ macro_rules! service_macro {
                         println!("{}",stringify!($type_q));
                         let input = get_input::<$type_q>();
                         let cmd = Command::$type_q(input);
-                        // let output = format!("{:?}",input);
-                        // Ok(output)
                         Ok(serde_json::to_string_pretty(&cmd).unwrap())
                     },)*
                     $(CommandID::$type_m => {
                         println!("{}",stringify!($type_m));
                         let input = get_input::<$type_m>();
                         let cmd = Command::$type_m(input);
-                        // let output = format!("{:?}",input);
-                        // Ok(output)
                         Ok(serde_json::to_string_pretty(&cmd).unwrap())
                     },)*
                 },

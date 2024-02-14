@@ -84,20 +84,12 @@ macro_rules! service_macro {
                 // }             
                 $(CommandID::$type => {
                     // sub.set_last_cmd(msg.to_vec());
-                    // Parse Command
-                    // let command = Command::<CommandID,($($cmd),*)>::parse(msg)?;                    
-                    // // Serialize 
-                    // let data = command.data;
                     let data = bincode::deserialize::<($($cmd),*)>(&msg[2..])?;
                     match run!(Subsystem::$func; sub, data $(,$cmd)*) {
-                        Ok(x) => {
-                            println!("Reply: {:?}",x);
-                            // let r = Command::serialize(command.id,x)?;
+                        Ok(x) => {                            
                             let mut r = <u16>::try_from(CommandID::$type)?.to_be_bytes().to_vec();
-                            r.append(&mut bincode::serialize(&x)?);
-                            // #[cfg(feature = "debug")]
+                            r.append(&mut bincode::serialize(&x)?);                            
                             println!("Reply: {:?}",r);
-                            // Ok(Command::<CommandID,$rep>::serialize(command.id,x)?),
                             Ok(r)
                         }
                         Err(e) => {
@@ -126,18 +118,6 @@ macro_rules! count {
     () => (0usize);
     ( $x:tt $($xs:tt)* ) => (1usize + count!($($xs)*));
 }
-
-// #[macro_export]
-// macro_rules! run {
-//     // Base case: 0 or more input parameters
-//     ($f:expr; $sub:expr, $in:expr, $($params:expr),*) => {
-//         $f($sub, $in, $($params),*);
-//     };
-//     // Recursive case: one or more arguments left
-//     ($f:expr; $sub:expr, $in:expr, $next_arg:expr, $($rest:tt)*) => {
-//         run!($f, $sub, $in, $next_arg, $($rest)*);
-//     };
-// }
 
 #[macro_export]
 macro_rules! run {    
