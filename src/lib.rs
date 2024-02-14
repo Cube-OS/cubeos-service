@@ -149,6 +149,7 @@ pub use crate::last::*;
 pub use crate::service::*;
 // #[cfg(feature = "app")]
 pub use crate::app::*;
-// pub use crate::command::Command;
+#[cfg(not(feature = "terminal"))]
+pub use crate::command::Command;
 pub use kubos_system::logger as Logger;
 pub use kubos_system::Config;

@@ -20,6 +20,66 @@ use crate::error::*;
 use serde::{Serialize,Deserialize};
 use std::convert::TryFrom;
 
+// Struct that enables deserializing of incoming Vec<u8> msgs
+// into data structures specified in the API or Service
+#[cfg(not(feature = "terminal"))]
+#[derive(Serialize,Deserialize, Debug)]
+pub struct Command<C,T> {
+    // SpacePacket Command-ID retained for future use
+    pub id: C,
+    // Data from Vec<u8>,
+    pub data: T,
+}
+#[cfg(not(feature = "terminal"))]
+impl<'a,C: TryFrom<u16> + Clone, T: Serialize + Deserialize<'a>> Command<C,T>
+    where 
+        u16: TryFrom<C>,
+        Error: From<<C as TryFrom<u16>>::Error>,
+        Error: From<<u16 as TryFrom<C>>::Error>,
+    {
+    // pub fn new(&self, id: C, msg: &'a Vec<u8>) -> Self {
+    //     Self {
+    //         id,
+    //         data: bincode::deserialize(&msg).unwrap(),
+    //     }
+    // }
+
+    pub fn new(id: C, data: T) -> Command<C,T> {
+        Command {
+            id,
+            data,
+        }
+    }
+
+    // parser function
+    pub fn parse(msg: &'a Vec<u8>) -> Result<Self> {       
+        
+        match u16::from_be_bytes([msg[0],msg[1]]) {
+            0 => Err(Error::from(bincode::deserialize::<Error>(&msg[2..])?)),
+            65535 => Err(Error::from(bincode::deserialize::<Error>(&msg[2..])?)),
+            id => Ok(Command{id: C::try_from(id)?,data: bincode::deserialize::<T>(&msg[2..])?}),            
+        }
+    }
+
+    pub fn ser(&self) -> Result<Vec<u8>> {
+        let mut buf: Vec<u8> = Vec::new();
+        let id = self.id.clone();
+
+        buf.append(&mut u16::try_from(id)?.to_be_bytes().to_vec());
+        buf.append(&mut bincode::serialize(&self.data)?);
+        Ok(buf)
+    }    
+
+    // serializer function
+    pub fn serialize(id: C, msg: T) -> Result<Vec<u8>> {
+        let mut buf: Vec<u8> = Vec::new();
+
+        buf.append(&mut u16::try_from(id)?.to_be_bytes().to_vec());
+        buf.append(&mut bincode::serialize(&msg)?);
+        Ok(buf)
+    }
+}
+
 #[macro_export]
 macro_rules! command_id{
     (

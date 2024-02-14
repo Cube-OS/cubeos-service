@@ -9,6 +9,7 @@ macro_rules! app_macro{
     ) => {
         use cubeos_service::udp_rs::Connection;
         use cubeos_service::command_id;
+        use std::str::FromStr;
 
         command_id!{
             $($type,)*

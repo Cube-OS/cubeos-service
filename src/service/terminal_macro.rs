@@ -119,8 +119,8 @@ macro_rules! service_macro {
                         _ => {
                             match cmd_enum {
                                 $(Command::$type_q(_) => {
-                                    match bincode::deserialize::<$($gql_q)?>(&buf[2..]) {
-                                        Ok(c) => match serde_json::to_string_pretty(&c) {
+                                    match bincode::deserialize::<$rep_q>(&buf[2..]) {
+                                        Ok(c) => match serde_json::to_string_pretty(&<$($gql_q)?>::from(c)) {
                                             Ok(s) => s,
                                             Err(e) => e.to_string(),
                                         },
