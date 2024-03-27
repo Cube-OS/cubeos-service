@@ -30,6 +30,7 @@ macro_rules! service_macro {
         use cubeos_service::command_id;
         use std::env::Args;
         use std::str::FromStr;
+        use log::debug;
         use crate::$krate::$strukt as Subsystem;
 
         command_id!{
