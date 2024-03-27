@@ -65,18 +65,14 @@ macro_rules! service_macro {
                 Err(_) => return Err(CubeOSError::NoCmd),
             };
             // let socket = s.unwrap();
-            #[cfg(feature = "debug")]
-            println!("{:?}",udp.to);
-            #[cfg(feature = "debug")]
-            println!("Cmd: {:?}", cmd);
+            debug!("{:?}",udp.to);
+            debug!("Cmd: {:?}", cmd);
             match socket.send_msg(&cmd,&udp.to) {
                 Ok(_) => {
-                    #[cfg(feature = "debug")]
-                    println!("Sending");
+                    debug!("Sending");
                     match socket.recv_msg() {
-                        Ok((b,a)) => {
-                            #[cfg(feature = "debug")]
-                            println!("Received: {:?}", b);
+                        Ok((b,a)) => {                            
+                            debug!("Received: {:?}", b);
                             Ok(b)
                         },
                         Err(_) => Err(CubeOSError::NoCmd),
@@ -174,14 +170,14 @@ macro_rules! service_macro {
             }         
         }
 
-        #[cfg(feature = "debug")]
-        pub fn debug() {
-            println!("{:?}", CommandID::VARIANT_COUNT);
-            let mut cmd: usize = 0;
-            while cmd <= CommandID::VARIANT_COUNT {
-                println!("{:?}: {:?}", cmd, CommandID::try_from(cmd as u16));
-                cmd = cmd + 1;
-            }
-        }  
+        // #[cfg(feature = "debug")]
+        // pub fn debug() {
+        //     println!("{:?}", CommandID::VARIANT_COUNT);
+        //     let mut cmd: usize = 0;
+        //     while cmd <= CommandID::VARIANT_COUNT {
+        //         println!("{:?}: {:?}", cmd, CommandID::try_from(cmd as u16));
+        //         cmd = cmd + 1;
+        //     }
+        // }  
     }
 }

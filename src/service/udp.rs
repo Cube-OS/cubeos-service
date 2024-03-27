@@ -27,7 +27,7 @@ use std::net::{SocketAddr,UdpSocket};
 use std::sync::{Arc, RwLock};
 use crate::error::*;
 use udp_rs::Message;
-use std::thread;
+use log::debug;
 
 /// Type definition for a "UDP" server pointer
 pub type UdpFn<T, Vec> = dyn Fn(&mut T, &mut Vec) -> Result<Vec<>> + std::marker::Send + std::marker::Sync + 'static;
@@ -126,21 +126,19 @@ impl <T: Clone + std::marker::Send + std::marker::Sync + 'static> Service<T> {
         // listens for UDP messages on socket
         // uses udp_handler function supplied by service to handle the cmd
         // returns answer to sender
-        #[cfg(feature = "debug")]
-        println!("Start listener on: {:?}", socket);
+        debug!("Start listener on: {:?}", socket);
         loop{
             match socket.recv_msg() {
                 Ok((mut b,a)) => {
                     let sock = UdpSocket::bind("0.0.0.0:0").expect("couldn't bind to address");
-                    println!("{:?}", sock);
+                    debug!("{:?}", sock);
                     // let handler = udp_handler.lock().unwrap().clone();
                     let handler = udp_handler.clone();
                     let s = self.context.subsystem.clone();
                     // thread::spawn(move || {
                         match handler(&mut s.try_write().unwrap(),&mut b) {
-                            Ok(x) => {
-                                #[cfg(feature = "debug")]
-                                println!("Send: {:?} to {:?}",&x,&a);
+                            Ok(x) => {                                
+                                debug!("Send: {:?} to {:?}",&x,&a);
                                 sock.send_msg(&x,&a).expect("Couldn't send")
                             }
                             Err(e) => {
@@ -161,8 +159,7 @@ impl <T: Clone + std::marker::Send + std::marker::Sync + 'static> Service<T> {
 // Returns [0,0] instead of CommandID, 
 // or [255,255] if another error occured within this function
 fn handle_err(err: &Error) -> Vec<u8>{
-    #[cfg(feature = "debug")]
-    println!("Handle Error");
+    debug!("Handle Error");
     let mut buf: Vec<u8> = Vec::new();
     match bincode::serialize(err) {
         Ok(mut k) => {

@@ -257,19 +257,7 @@ impl Service {
                 let output = self.functions.output.clone();                
                 loop {
                     match input() {
-                        Ok(parts) => {
-                            // let parts = result.split(|c| 
-                            //     c == ':' ||
-                            //     c == '{' ||
-                            //     c == ',')
-                            // .map(|s| s.trim_matches(|c| 
-                            //     c == ' ' || 
-                            //     c == '}' || 
-                            //     c == '{' || 
-                            //     c == ','))
-                            // .map(|s| s.to_string()) // Convert &str to String
-                            // .collect::<Vec<String>>(); // Collect into Vec<String>
-                            
+                        Ok(parts) => {                           
                             let result = output(parts, self.context.udp_pass.clone());
                             println!("{}",result);
                             if self.command.is_some() {                                        

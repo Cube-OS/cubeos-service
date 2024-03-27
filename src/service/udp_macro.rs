@@ -39,61 +39,23 @@ macro_rules! service_macro {
             $($type,)*
         }
 
-        //impl Last for Subsystem {
-        //    fn set_last_cmd(&self, input: Vec<u8>) {
-        //        if let Ok(mut last_cmd) = self.last_cmd.write() {
-        //            *last_cmd = input;
-        //        }
-        //    }
-        //    fn get_last_cmd(&self) -> CubeOSResult<Vec<u8>> {
-        //        Ok(self.last_cmd.read().unwrap().to_vec()) 
-        //    }
-        //   fn set_last_err(&self, err: CubeOSError) {
-        //        println!("{:?}",err);
-        //        if let Ok(mut last_err) = self.last_err.write() {
-        //            *last_err = err;
-        //        }
-        //    }
-        //    fn get_last_err(&self) -> CubeOSResult<CubeOSError> {
-        //        Ok(self.last_err.read().unwrap().clone())
-        //    }
-        //}
-
-        //impl Ping for Subsystem {
-        //    fn ping(&self) -> CubeOSResult<()> {
-        //       Ok(())
-        //    }
-        //}
-
         // UDP handler function running on the service
         // takes incoming msg and parses it into CommandID and Command for msg handling
         pub fn udp_handler(sub: &mut Box<Subsystem>, msg: &mut Vec<u8>) -> CubeOSResult<Vec<u8>> {
-            #[cfg(feature = "debug")]
-            println!("Message: {:?}",msg);
+            debug!("Message: {:?}",msg);
 
             // Verify CommandID            
-            match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {
-                // CommandID::Ping => {
-                //     Command::<CommandID,()>::serialize(CommandID::Ping,sub.ping()?)
-                // },
-                // CommandID::LastCmd => {
-                //     Command::<CommandID,Vec<u8>>::serialize(CommandID::LastCmd,sub.get_last_cmd()?)
-                // },
-                // CommandID::LastErr => {
-                //     Command::<CommandID,CubeOSError>::serialize(CommandID::LastErr,sub.get_last_err()?)
-                // }             
+            match CommandID::try_from(u16::from_be_bytes([msg[0],msg[1]]))? {          
                 $(CommandID::$type => {
-                    // sub.set_last_cmd(msg.to_vec());
                     let data = bincode::deserialize::<($($cmd),*)>(&msg[2..])?;
                     match run!(Subsystem::$func; sub, data $(,$cmd)*) {
                         Ok(x) => {                            
                             let mut r = <u16>::try_from(CommandID::$type)?.to_be_bytes().to_vec();
                             r.append(&mut bincode::serialize(&x)?);                            
-                            println!("Reply: {:?}",r);
+                            debug!("Reply: {:?}",r);
                             Ok(r)
                         }
                         Err(e) => {
-                            // sub.set_last_err(CubeOSError::from(e.clone()));
                             Err(CubeOSError::from(e))
                         }
                     }
@@ -101,15 +63,15 @@ macro_rules! service_macro {
             }
         }
 
-        #[cfg(feature = "debug")]
-        pub fn debug() {
-            println!("{:?}", CommandID::VARIANT_COUNT);
-            let mut cmd: usize = 0;
-            while cmd <= CommandID::VARIANT_COUNT {
-                println!("{:?}: {:?}", cmd, CommandID::try_from(cmd as u16));
-                cmd = cmd + 1;
-            }
-        }            
+        // #[cfg(feature = "debug")]
+        // pub fn debug() {
+        //     println!("{:?}", CommandID::VARIANT_COUNT);
+        //     let mut cmd: usize = 0;
+        //     while cmd <= CommandID::VARIANT_COUNT {
+        //         println!("{:?}: {:?}", cmd, CommandID::try_from(cmd as u16));
+        //         cmd = cmd + 1;
+        //     }
+        // }            
     };
 }
 
