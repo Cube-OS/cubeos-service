@@ -264,6 +264,11 @@ impl Service {
                                 let data = format!("{}: {:?}", app_name, result);
                                 writeln!(file, "{}", data).unwrap();
                             }
+                            // Wait for Enter key press
+                            println!("Press Enter to continue...");
+                            std::io::stdout().flush().unwrap(); // Make sure "Press Enter" message is displayed
+                            let mut dummy = String::new();
+                            std::io::stdin().read_line(&mut dummy).unwrap();
                         },
                         Err(e) => {
                             println!("{}", e);
