@@ -243,7 +243,7 @@ impl Service {
                 let output = self.functions.output.clone();
                 let result = output(self.command.unwrap(), self.context.udp_pass.clone());
                     
-                let data = format!("{}: {:?}", app_name, result);
+                let data = format!("{}: {}", app_name, result);
                 writeln!(file, "{}", data).unwrap();
                 println!("{}",data);            
             }
