@@ -1,2 +1,2 @@
 [registries]
-cube-os = { index = "ssh://git@github.com/Cube-OS/crates.git" }
+cube-os = { index = "https://github.com/Cube-OS/crates.git" }

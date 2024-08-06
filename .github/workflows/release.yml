@@ -1,0 +1,17 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main # Trigger workflow on push to the main branch
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Run ktra action
+    - name: Run ktra
+      uses: patrickoppel/ktra/.github/actions@develop
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}

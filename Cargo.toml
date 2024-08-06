@@ -1,8 +1,9 @@
 [package]
 name = "cubeos-service"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Patrick Oppel <patrick.oppel94@gmail.com>"]
 edition = "2018"
+repository = "https://github.com/Cube-OS/cubeos-service"
 
 [dependencies]
 serde = {version = "1.0", features = ["derive"]}
@@ -13,10 +14,9 @@ variant_count = "1.1"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
 pkg-config = "= 0.3.15"
 
-kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
-# bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
+kubos-system = { version = "0.2.0", registry = "cube-os" }
 bincode = { version = "1.3.3", registry = "cube-os" }
-udp-rs = { git = "ssh://git@github.com/Cube-OS/udp-rs"}
+udp-rs = { version = "*", registry = "cube-os" }
 failure = "0.1.8"
 
 serial = {version = "0.4.0"}
@@ -26,17 +26,16 @@ nix = { version = "0.24.1", optional = true}
 # Syslog
 syslog = { version = "^6.0.1"} 
 # Database only activate for Database for now
-cubeos-telemetry-db = { git = "ssh://git@github.com/Cube-OS/telemetry-db-api", optional = true}
+cubeos-telemetry-db = { version = "0.1.0", registry = "cube-os", optional = true}
 diesel = { version = "1.0.0", features = ["sqlite"], optional = true}
 
 dialoguer = {version = "0.10.2", optional = true}
 strum = {version = "0.24", optional = true}
 strum_macros = {version = "0.24", optional = true}
-terminal-macro = { git = "ssh://git@github.com/Cube-OS/terminal-macro", optional = true}
+terminal-macro = { version = "0.1.0", registry = "cube-os", optional = true}
 
 lazy_static = {version = "1.4.0"}
 gpio = { version = "0.4"}
-
 
 # features enable conditional compiling,
 # features cannot be combined in one compilation
