@@ -15,7 +15,7 @@ variant_count = "1.1"
 pkg-config = "= 0.3.15"
 
 kubos-system = { version = "0.2.0", registry = "cube-os" }
-bincode = { version = "1.3.3", registry = "cube-os" }
+bincode = { version = "1.3.4", registry = "cube-os" }
 udp-rs = { version = "*", registry = "cube-os" }
 failure = "0.1.8"
 
