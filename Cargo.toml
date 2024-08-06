@@ -1,6 +1,6 @@
 [package]
 name = "cubeos-service"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Patrick Oppel <patrick.oppel94@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/Cube-OS/cubeos-service"
