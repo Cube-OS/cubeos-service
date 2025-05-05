@@ -14,8 +14,7 @@ variant_count = "1.1"
 pkg-config = "= 0.3.15"
 
 kubos-system = { git = "ssh://git@github.com/Cube-OS/system-api.git"}
-# bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
-bincode = { version = "1.3.3", registry = "cube-os" }
+bincode = { git = "ssh://git@github.com/Cube-OS/bincode.git"}
 udp-rs = { git = "ssh://git@github.com/Cube-OS/udp-rs"}
 failure = "0.1.8"
 
