@@ -259,6 +259,8 @@ impl Service {
                     match input() {
                         Ok(parts) => {                           
                             let result = output(parts, self.context.udp_pass.clone());
+                            let time = chrono::Local::now();
+                            println!("{}",time);
                             println!("{}",result);
                             if self.command.is_some() {                                        
                                 let data = format!("{}: {:?}", app_name, result);

@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! app_macro{
     (
-        $app: tt: $timeout: tt;
+        // $app: tt: $timeout: tt;
         $service: tt: $struct: tt {
             $(            
                 $(query)?$(mutation)?: $type: ident => fn $func: tt (&$(mut )?self $(,$msg: tt: $cmd: ty)*) -> $ign1: tt<$rep: ty> $(; out: $gql_q: ty)?;
@@ -42,20 +42,20 @@ macro_rules! app_macro{
                     let mut command = Command::serialize(CommandID::$type,($($msg),*))?;
                     // command.insert(0,0);
                     debug!("Command: {:?}", command);
-                    match connection.transfer_timeout(command,std::time::Duration::from_secs($timeout)) {
-                        Ok(response) => {
-                            debug!("Response: {:?}", response);
-                            match Command::<CommandID,$rep>::parse(&response) {
-                                Ok(c) => Ok(c.data),
-                                Err(e) => Err(e.into()),
-                            }
-                        },
-                        Err(e) => Err(e.into()),
-                    }
-                    // match Command::<CommandID,$rep>::parse(&connection.transfer_timeout(command,std::time::Duration::from_secs(1))?) {
-                    //     Ok(c) => Ok(c.data),
-                    //     Err(e) => Err(e),
-                    // }                
+                    // match connection.transfer_timeout(command,std::time::Duration::from_secs($timeout)) {
+                    //     Ok(response) => {
+                    //         debug!("Response: {:?}", response);
+                    //         match Command::<CommandID,$rep>::parse(&response) {
+                    //             Ok(c) => Ok(c.data),
+                    //             Err(e) => Err(e.into()),
+                    //         }
+                    //     },
+                    //     Err(e) => Err(e.into()),
+                    // }
+                    match Command::<CommandID,$rep>::parse(&connection.transfer_timeout(command,std::time::Duration::from_secs(1))?) {
+                        Ok(c) => Ok(c.data),
+                        Err(e) => Err(e),
+                    }                
                 }
             )*
         }       
