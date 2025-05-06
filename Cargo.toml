@@ -21,7 +21,7 @@ failure = "0.1.8"
 serial = {version = "0.4.0"}
 uart-rs = { git = "ssh://git@github.com/Cube-OS/uart-rs"}
 # APP activate for nix only
-nix = { version = "0.24.1", optional = true}
+nix = { version = "0.26.2", optional = true}
 # Syslog
 syslog = { version = "^6.0.1"} 
 # Database only activate for Database for now
