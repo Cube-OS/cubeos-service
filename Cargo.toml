@@ -26,7 +26,7 @@ nix = { version = "0.24.1", optional = true}
 syslog = { version = "^6.0.1"} 
 # Database only activate for Database for now
 cubeos-telemetry-db = { git = "ssh://git@github.com/Cube-OS/telemetry-db-api", optional = true}
-diesel = { version = "1.0.0", features = ["sqlite"], optional = true}
+diesel = { version = "2.0.4", features = ["sqlite"], optional = true}
 
 dialoguer = {version = "0.10.2", optional = true}
 strum = {version = "0.24", optional = true}
